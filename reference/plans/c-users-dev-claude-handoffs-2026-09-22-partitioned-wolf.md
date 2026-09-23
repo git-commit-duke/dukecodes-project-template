@@ -60,17 +60,45 @@ The owner then set the direction:
 3. Verify: the branch exists via `gh api`, and the file count and sha256 of each plan file match local.
 4. Recycle the throwaway clone.
 
+- [x] **2.0 done (2026-09-23).**
+  - main = origin = `d1eddf0`; 0 issues; private; not a template.
+  - `gh` token scopes `repo, gist, read:org, admin:public_key, admin:ssh_signing_key` (**no `workflow` scope**).
+  - SSH signing is on (`id_ed25519.pub`); the salvage sources are present; gitleaks 8.30.1.
+- [x] **2.1 done (2026-09-23; owner greenlit, with the Slate 7 plan excluded and sent to homelab in 2.4).**
+  - Branch `reference/wip-2026-09-22` at `46329dd`; GitHub reports `verified: true, reason: valid`.
+  - 64 files under `reference/`.
+  - The rebuild's 52 files match the `verify-final` blob hashes.
+  - sha256 of the plans, handoff, drafts and harness match the originals, both locally and on GitHub.
+  - gitleaks: no leaks in 865 KB.
+  - main is untouched (`d1eddf0`).
+  - The throwaway clone is in the Recycle Bin.
+  - Note: a PowerShell quoting slip in the confirmation step caused harmless "command not found" noise and no changes; re-checked correctly.
+
 **2.2 Stray cleanup (local).** Move to the Recycle Bin:
 - this session's 7 strays (listed in the appendix);
 - the previous session's `x`, `.x`, `.x_live_true`, `nul_should_not`.
 
 Verify with `find` that none remain.
 
+- [x] **2.1 audit:** CONCERNS, then closed. The fourth plan's GitHub copy hashes `3046ca4a…` (57,239 B), equal to the local plan minus the 2.1 tick block. The quoting slip is judged unable to change the outcome.
+- [x] **2.2 done (2026-09-23; owner greenlit A+B+C, all 34).**
+  - Planned 34, moved 34, still present 0.
+  - The Recycle Bin lists all 34 with their original folders.
+  - `git status` in the clone is clean.
+
 **2.3 Local Claude config (D1).**
 1. Restore the 87 explicit `false` entries (39 `@inline`, 48 official) into `~/.claude/settings.json` `enabledPlugins`, taken from `Downloads/claude-settings-2026-09-22.json`. The 8 `true` entries stay.
 2. Verify: the JSON parses, and the counts are 8 true / 87 false.
 
 Owner actions follow: the account trim, Desktop connectors off, and the Claude GitHub App set to "Only select repositories". Then the owner opens a fresh session, where `session_connectors_status` must show no desktop-commander and no unwanted connectors.
+
+- [x] **2.2 audit:** PASS.
+- [x] **2.3 done (2026-09-23; owner greenlit 87 false entries + pr-review-toolkit off).**
+  - `~/.claude/settings.json` parses; `enabledPlugins` has 95 entries: 7 true, 88 false.
+  - Restoring the original 8-line block reproduces the pre-change sha `a187bf122071d572` exactly, so only `enabledPlugins` changed.
+  - New sha `92f04d56bdb36923`, 9,667 B.
+  - Rollback: remove the 87 added false keys and set pr-review-toolkit back to true.
+  - Still to come: the owner's clicks (account, Desktop, GitHub App), then the fresh-session check.
 
 **2.4 Ledger setup (GitHub write).** Create the labels, then these issues in project-template. Each issue body carries: context, acceptance criteria written as failing tests, files, salvage pointers into the reference branch, and dependencies. The issue text is shown in the manifest before creation.
 
@@ -85,6 +113,19 @@ Owner actions follow: the account trim, Desktop connectors off, and the Claude G
 
 A homelab issue is also filed for D4 (the "workstation" runbook section).
 
+- [x] **2.3 audit:** PASS. The auditor inferred that `@inline` is obsolete; the raw docs refute that for `--plugin-dir` plugins (plugins-reference.md:436: `@inline` is "the identity that `--plugin-dir` plugins use", which is the Desktop injection route). Account plugins use `@synced` (:432, :447).
+- [x] **2.4 done (2026-09-23; owner greenlit as listed).**
+  - Labels `foundation`, `gates`, `risk:high` and `needs-decision` in project-template; `workstation` in homelab.
+  - Issues project-template #1–#7, all with the correct labels and no missing sections (read back via API).
+  - homelab #1 embeds the Slate 7 plan verbatim (sha `bbfcb2cebe459a8b`, matching the local file).
+
+- [x] **2.4 audit:** CONCERNS, resolved:
+  - (1) The Files section was missing from #5 and #6, a deviation from the manifest. Fixed; all six now have all six sections (re-verified).
+  - (2) Infrastructure detail in homelab #1: accepted; homelab is private, and the text scanned clean. If homelab goes public, that body goes first.
+  - (3) Label order: refuted (GitHub sorts labels alphabetically).
+  - (5) Salvage paths: 27 checked against the branch tree, 0 missing.
+  - (4) Acceptance-criteria testability and (6) #7 content depth are **filed to Task 3**.
+
 **2.5 Core files (local).**
 - Rewrite `~/.claude/CLAUDE.md` (≤150 lines, writing-for-agents style) to cover: cloud-only build, no local build, greenlight per batch, the no-sprawl rule, a cloud preflight (account plugins and connectors), Kernel pointers, and handoff via issue comment.
 - Memory:
@@ -94,6 +135,24 @@ A homelab issue is also filed for D4 (the "workstation" runbook section).
   - update `cowork-isolated-sandbox`;
   - add feedback memories `no-sprawl-single-source` and `greenlight-before-file-changes`.
 - Post the session handoff as a comment on a "Foundation: resume state" issue, then recycle `~/.claude/handoffs/…md`.
+
+- [x] **2.5a done (2026-09-23; greenlit).**
+  - Commit `3781017` on the reference branch (`verified: true`) adds `reference/user-claude/`: CLAUDE.md (pre-rewrite), rules ×2, maintainer, checkpoint, session-close, hooks ×2. All 8 are sha-SAME on GitHub; 72 files under `reference/`; gitleaks clean.
+  - The throwaway clone is in the Recycle Bin.
+  - `settings.json` is posted on homelab #1 (comment 5800453862); the posted sha `92f04d56…` equals the local file.
+- [x] **2.5b done (2026-09-23; greenlit text written exactly).** `~/.claude/CLAUDE.md` now:
+  - 78 lines; 0 of 7 stale claims; 10 sections; diff vs the preserved old version +57/−37; sha `1acc5b10…`.
+  - Five old lines were not carried over (Vercel default, path-scoped `rules/` pointer, which gate tools the cloud lacks, "strictest verdict wins", `/checkpoint` per slice). They are proposed in the next manifest.
+- [x] **2.5a/b audit:** CONCERNS. Three more dropped items (Explore >3 files, gates deterministic, `file:line`) were folded into the CLAUDE.md additions.
+- [x] **2.5 second round done (2026-09-23; all greenlit).**
+  - **CLAUDE.md +8 points:** 81 lines, each point present once, sha `926af24f…`.
+  - **2.5c memory:**
+    - 3 duplicates recycled: plain-language-grilling, tools-before-web-search, zero-trust-protocol. Their content lives in CLAUDE.md.
+    - 3 rewritten: the Foundation pointer, cloud facts, Desktop injection.
+    - `MEMORY.md` is down to 3 lines; the links resolve; no stale claims.
+  - **2.5d:** README row committed as `41f7a69` (verified); handoff comment 5800670721 on #7 with 5 of 5 sections.
+  - **2.5e:** 5 copies were sha-SAME with GitHub immediately before recycling. The 4 plans and the `handoffs` folder are recycled; `~/.claude/plans` holds only this live plan.
+  - **Observed, not ours:** `ebook-code-modernization-playbook.pdf` left Downloads at 15:42:08 (Recycle Bin); no command of this session named it.
 
 **2.6 Change report.** A full, detailed outline of every change: path, before, after, and proof. It is posted on the resume-state issue and shown to the owner.
 
