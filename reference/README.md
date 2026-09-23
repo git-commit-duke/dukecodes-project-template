@@ -17,3 +17,4 @@ Salvage, don't merge. An issue names the pieces it needs. The session copies the
 | `drafts/` | `combined-reviewed.patch`, the uncommitted drafts from six local worktrees (16 files) |
 | `research/` | Task 1 research: 10 sources, 607 verbatim-checked rows, the reconciled subagent roster and its proof table |
 | `audits/` | The confirmed gate-code defects and the setup audit findings |
+| `user-claude/` | The user-level workflow files from `~/.claude` before the 2026-09-23 rewrite: CLAUDE.md, rules, maintainer agent, checkpoint and session-close skills, hooks. The salvage source for the roster issue and the rollback point for the rewrite |
