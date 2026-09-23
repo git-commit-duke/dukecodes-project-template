@@ -1,0 +1,650 @@
+################ WORKTREE/BRANCH: adr-cloud-first (base origin/main d1eddf0)
+diff --git a/docs/adr/0001-github-native-security-baseline.md b/docs/adr/0001-github-native-security-baseline.md
+new file mode 100644
+index 0000000..4a35a7c
+--- /dev/null
++++ b/docs/adr/0001-github-native-security-baseline.md
+@@ -0,0 +1,18 @@
++# ADR-0001: GitHub-native security baseline before paid scanners
++
++Date: 2026-09-19
++Status: accepted
++
++## Context
++
++The owner is new to DevSecOps and wants portfolio repos that are demonstrably secured, without paying for tooling before there is code to scan. GitHub provides dependency alerts, automated security updates, secret scanning, push protection, and CodeQL at no cost on public repositories.
++
++## Decision
++
++Every repo enables, at creation: Dependabot alerts, Dependabot security updates, secret scanning, and push protection. Public repos also get CodeQL default setup once they contain a supported language. Paid scanners are considered only when a project's threat model needs something GitHub does not provide, and that need is written down in a new ADR first.
++
++## Consequences
++
++- Repos are public by default, because that is where these features are free. Anything that must stay private accepts weaker scanning and says so in its README.
++- The setup wizard enables the baseline through the GitHub API so it cannot be forgotten.
++- Every later tool purchase has to name the gap it closes.
+diff --git a/docs/adr/0002-no-secrets-on-disk.md b/docs/adr/0002-no-secrets-on-disk.md
+new file mode 100644
+index 0000000..be4cac7
+--- /dev/null
++++ b/docs/adr/0002-no-secrets-on-disk.md
+@@ -0,0 +1,20 @@
++# ADR-0002: No secrets on disk; device-flow sign-in only
++
++Date: 2026-09-19
++Status: accepted
++
++## Context
++
++AI coding agents read files into their context. Any secret sitting in a file the agent can open may end up in a transcript, a log, or a commit. The owner is also new to secret management and should not have to learn a vault before shipping a first project.
++
++## Decision
++
++- Tooling signs in through browser device flows (gh, vercel, tailscale) so each CLI holds its own token in its own store. No script asks for, prints, or stores a token.
++- Agents are denied reading `.env` files, SSH keys, and Claude's credential file through permission rules, and denied editing `.env` files and lockfiles through a PreToolUse hook.
++- Runtime secrets for deployed apps live in the platform's secret store (Vercel environment variables, GitHub Actions secrets), never in the repo.
++
++## Consequences
++
++- `.env.example` is the only env file agents may edit; it documents variable names, never values.
++- Local development reads secrets from a `.env` the human writes by hand.
++- Adding any secret-bearing file to a repo is a NACK from the maintainer review, no exceptions.
+diff --git a/docs/adr/0003-gates-travel-with-the-repository.md b/docs/adr/0003-gates-travel-with-the-repository.md
+new file mode 100644
+index 0000000..c6bd3f8
+--- /dev/null
++++ b/docs/adr/0003-gates-travel-with-the-repository.md
+@@ -0,0 +1,44 @@
++# ADR-0003: Gates travel with the repository; conveniences stay on the workstation
++
++Date: 2026-09-22
++Status: superseded by ADR-0004
++
++## Context
++
++`claude/` was written as a single user-level payload: `claude/install.sh` copies it into `~/.claude` on the workstation, and that is the only way any of it loads. This holds as long as the workstation is the only place work happens.
++
++It is not. Work now also happens in Claude Code on the web, in an ephemeral cloud container that clones the repo and nothing else. A session there was measured against this repo:
++
++- `~/.claude` is harness-managed and fresh. No `CLAUDE.md`, no `settings.json`, no rules, no agents, no hooks, no status line.
++- Twelve plugins are enabled in `settings.fragment.json`. The container's plugin directory is empty.
++- `gh` is not installed, and the container is directed to the GitHub MCP tools instead. `hooks/session-start.sh` guards on `command -v gh` and so drops the ledger without saying it dropped it.
++- Egress is restricted. GitHub and the package registries resolve; general web hosts, including `tailscale.com`, return policy denials.
++
++One constraint decides the shape of the fix. A committed `.claude/settings.json` reaches a cloud session only when that session holds a single repository. The settings documentation is explicit:
++
++> A session with several repositories starts above the clones and reads only the `enabledPlugins` and `extraKnownMarketplaces` keys from each repository's `.claude/settings.json`, not permission rules, hooks, `env`, or other keys.
++
++So moving a gate into `.claude/` fixes single-repo sessions and leaves multi-repo sessions ungated. Only a git hook survives there, because git runs it rather than Claude Code. A gate set that stops at the Claude Code layer is therefore incomplete by construction.
++
++CONTEXT.md defines a Gate as a deterministic check that blocks work, and says gates are fixed, not argued with. A gate that only exists on one machine is not fixed. The protected-files hook of ADR-0002 is the sharpest case: the rule that agents may not edit `.env` files is enforced by a hook that a cloud session never loads.
++
++## Decision
++
++Split the payload by what has to be true everywhere, rather than by who installs it.
++
++- **Gates live in `.claude/` and are committed.** Permission rules, the PreToolUse protected-files hook, the SessionStart ledger hook, path-scoped rules, the `maintainer` agent, and the `checkpoint` skill. A checkout carries them, so they load in a cloud container, on a second machine, and in CI without an install step.
++- **Conveniences live in `claude/` and install to `~/.claude`.** The global `CLAUDE.md`, the status line, the plugin and marketplace manifest, and skills that are not gates. These are workstation setup and may legitimately be absent elsewhere.
++- **Each file has one home.** `claude/install.sh` installs both directories into `~/.claude`, so the workstation still gets every gate for every project. Nothing is vendored twice.
++- **`claude/install-project.sh` copies the gate set into any other repo's `.claude/`.** That is how `homelab`, `quant-intel`, and `project-template` get the same gates in their own cloud sessions.
++- **The secret and protected-file gates are backed by a git hook.** `.githooks/pre-commit` repeats the env-file refusal and the secret scan at commit time. Git runs it, so it holds in a multi-repo session, under any editor, and for any tool that is not Claude Code. The Claude Code layer is the fast feedback; the git layer is the one that cannot be bypassed by session shape.
++- **A gate degrades loudly, never silently.** Where a gate depends on a tool that may be absent, it says so in its output and names the substitute. `gh` is the first such case: the ledger hook reports its absence and points at the GitHub MCP tools.
++
++## Consequences
++
++- `.claude/` is no longer a place for one stray rule file. It is the contract, and a change to it is a change to how every checkout of this repo behaves, on any machine.
++- Hook commands in `.claude/settings.json` are written against `$CLAUDE_PROJECT_DIR` so they resolve in any clone. `install.sh` rewrites that prefix to an absolute `~/.claude` path when it merges them for user scope.
++- Adding a gate now means adding it to `.claude/` and running `install-project.sh` for the other repos. A gate that exists only in `~/.claude` is a bug.
++- Procedures that assume `gh` are dual-path or they are broken remotely. `docs/agents/issue-tracker.md` names both the `gh` command and its MCP equivalent.
++- Restricted egress stands. Homelab configuration can be edited from a cloud session but cannot be verified against a live host, because the tailnet is unreachable. Verification stays a workstation step, and any runbook that needs the tailnet says so.
++- This contradicts decision D9 of `docs/superpowers/specs/2026-09-19-repo-scaffold-design.md`, named here as `claude/rules/adr.md` requires. D9 assigns the deny list, the protected-files hook, and the session-start ledger to the global layer and gives the project layer only the allow list and an edit-time gate. That is the layer a cloud session never loads, so D9 would leave every remote session ungated. The split above replaces it. D9's other half stands: the two layers still do not duplicate each other.
++- Nothing here is implemented yet. This ADR records the decision only; the `.claude/` move, the git hook, and `install-project.sh` are separate work and this file should not be read as describing the repository's current state.
+diff --git a/docs/adr/0004-cloud-first-repo-isolated-workspace.md b/docs/adr/0004-cloud-first-repo-isolated-workspace.md
+new file mode 100644
+index 0000000..ea5c8a5
+--- /dev/null
++++ b/docs/adr/0004-cloud-first-repo-isolated-workspace.md
+@@ -0,0 +1,37 @@
++# ADR-0004: Cloud-first, repo-isolated workspace
++
++Date: 2026-09-22
++Status: accepted
++
++## Context
++
++ADR-0003 measured a Claude Code cloud session against dev-setup. It had no user-level `CLAUDE.md`, rules, agents or hooks, 0 plugins, no `gh`, and restricted egress. Everything that made up the gates lived in `~/.claude` on one workstation, so remote work ran ungated. It also quoted the constraint that shapes any fix: a cloud session holding several repositories reads only `enabledPlugins` and `extraKnownMarketplaces` from each repository's `.claude/settings.json`, not permissions or hooks.
++
++A read-only audit of the workstation on 2026-09-22 found the user-level layer had drifted as well:
++
++- 76 of 124 installed plugins were enabled, against the 12 that dev-setup declared, because `merge-settings.js` never overrides a local choice.
++- `claude/install.sh` aborts on dangling skill links.
++- `core.hooksPath` was unset in every clone, so no pre-commit gate ran.
++- The `.env` guard covered edits only; reads through `Read` or Bash were not blocked.
++
++The one commit made from a cloud session (dev-setup PR #1, `4f84633`) is reported by GitHub as `verified: true`, so the signed-commit rule holds in cloud sessions.
++
++The owner decided: cloud sessions are primary, one repository per cloud session, repositories are isolated from each other, the template is a starting point copied once, workstation setup lives outside the template, and `~/.claude` stays at its defaults.
++
++## Decision
++
++Each repository carries its own gates, committed in `.claude/`: permission rules, the PreToolUse guard hook, the SessionStart ledger hook, path-scoped rules, the `maintainer` agent, the `checkpoint` skill and the plugin list. This is ADR-0003's first decision and it stands.
++
++There is no shared layer between repositories. A new repository is created from this template with `gh repo create --template`, and from then on it owns and changes its copy. There is no `install-project.sh`, no private plugin marketplace and no projects-root `CLAUDE.md`. This replaces ADR-0003's workstation "conveniences" layer and its sync script.
++
++GitHub is the gate that holds wherever the work happens. The `universal` CI job runs on every pull request. Public repositories add a ruleset: pull request required, signed commits, required status checks, no force push. The git pre-commit hook repeats the secret and env-file refusal at commit time, and gates degrade loudly when a tool they rely on is absent. Both are carried over from ADR-0003.
++
++Cloud sessions hold one repository each. Local clones are disposable: nothing is kept only on a workstation.
++
++## Consequences
++
++- An improvement to the template does not reach existing repositories. Each one ports a fix by pull request if it wants it. That is the cost of isolation.
++- A local session opened outside any repository has no project guardrails, because `~/.claude` holds no rules.
++- The Windows workstation has no Bash sandbox: `sandbox` requires macOS, Linux or WSL2. The guard hook is therefore the only Bash-level secret guard on that machine. It is defense in depth, not a guarantee; CI secret scanning and GitHub push protection are the backstop.
++- Multi-repository cloud sessions are out of policy, because they drop permissions and hooks.
++- This supersedes ADR-0003 and the dev-setup draft spec `docs/superpowers/specs/2026-09-19-repo-scaffold-design.md`, including its decisions D9 and D11 and its plan to fold this template into dev-setup. dev-setup is archived.
+################ WORKTREE/BRANCH: ci-universal (base origin/main d1eddf0)
+diff --git a/.github/dependabot.yml b/.github/dependabot.yml
+index 6f44018..e9c9dfb 100644
+--- a/.github/dependabot.yml
++++ b/.github/dependabot.yml
+@@ -1,13 +1,23 @@
+ version: 2
+ updates:
+-  - package-ecosystem: npm
+-    directory: /
+-    schedule:
+-      interval: weekly
+-    groups:
+-      minor-and-patch:
+-        update-types: [minor, patch]
++  # Keeps the SHA-pinned actions in .github/workflows current.
+   - package-ecosystem: github-actions
+     directory: /
+     schedule:
+       interval: weekly
++    cooldown:
++      default-days: 7
++    groups:
++      actions:
++        patterns: ["*"]
++
++  # Uncomment once the repository has a package.json.
++  # - package-ecosystem: npm
++  #   directory: /
++  #   schedule:
++  #     interval: weekly
++  #   cooldown:
++  #     default-days: 7
++  #   groups:
++  #     minor-and-patch:
++  #       update-types: [minor, patch]
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 81382e1..50f8c89 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -5,31 +5,93 @@ on:
+   push:
+     branches: [main]
+ 
+-permissions:
+-  contents: read
+-  pull-requests: write
++permissions: {}
++
++concurrency:
++  group: ci-${{ github.ref }}
++  cancel-in-progress: true
+ 
+ jobs:
+-  checks:
++  # Runs in every repository, whatever its stack. Its name is the required status check.
++  universal:
+     runs-on: ubuntu-latest
++    permissions:
++      contents: read
++      pull-requests: read # gitleaks lists the commits of the pull request
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: pnpm/action-setup@v4
+-      - uses: actions/setup-node@v4
++      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
++        with:
++          fetch-depth: 0
++          persist-credentials: false
++      - name: Secret scan
++        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
++        env:
++          GITHUB_TOKEN: ${{ github.token }}
++          GITLEAKS_ENABLE_COMMENTS: false
++      - name: Workflow lint
++        run: |
++          go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
++          "$(go env GOPATH)/bin/actionlint"
++      - name: Workflow security
++        uses: zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482 # v0.6.4
++        with:
++          advanced-security: false
++          version: 1.30.1
++      - name: Code security
++        run: pipx run semgrep==1.177.0 scan --config p/default --error --metrics=off
++      - name: Repository self-tests
++        run: |
++          shopt -s nullglob
++          for t in tests/*.test.sh; do echo "== $t"; bash "$t"; done
++          if [[ -d .claude/hooks ]]; then node --test .claude/hooks/; fi
++
++  # Switches itself on when the repository has a package.json.
++  node:
++    runs-on: ubuntu-latest
++    permissions:
++      contents: read
++    steps:
++      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
++        with:
++          persist-credentials: false
++      - name: Detect package.json
++        id: detect
++        run: |
++          if [[ -f package.json ]]; then
++            echo "present=true" >> "$GITHUB_OUTPUT"
++          else
++            echo "present=false" >> "$GITHUB_OUTPUT"
++            echo "No package.json: Node checks skipped."
++          fi
++      - name: Check the package.json contract
++        if: steps.detect.outputs.present == 'true'
++        run: node .github/scripts/check-package.mjs
++      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
++        if: steps.detect.outputs.present == 'true'
++      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
++        if: steps.detect.outputs.present == 'true'
+         with:
+           node-version: 24
+           cache: pnpm
+-      - run: pnpm install --frozen-lockfile
+-      - run: pnpm typecheck
+-      - run: pnpm lint
+-      - run: pnpm test
+-      - run: pnpm build
++      - if: steps.detect.outputs.present == 'true'
++        run: pnpm install --frozen-lockfile
++      - if: steps.detect.outputs.present == 'true'
++        run: pnpm run --if-present typecheck
++      - if: steps.detect.outputs.present == 'true'
++        run: pnpm run --if-present lint
++      - if: steps.detect.outputs.present == 'true'
++        run: pnpm test
++      - if: steps.detect.outputs.present == 'true'
++        run: pnpm run --if-present build
+ 
++  # GitHub offers dependency review on public repositories only.
+   dependency-review:
+-    if: github.event_name == 'pull_request'
++    if: github.event_name == 'pull_request' && !github.event.repository.private
+     runs-on: ubuntu-latest
++    permissions:
++      contents: read
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/dependency-review-action@v4
++      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+         with:
+-          comment-summary-in-pr: on-failure
++          persist-credentials: false
++      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+diff --git a/.github/scripts/check-package.mjs b/.github/scripts/check-package.mjs
+new file mode 100644
+index 0000000..c03b0ce
+--- /dev/null
++++ b/.github/scripts/check-package.mjs
+@@ -0,0 +1,14 @@
++// CI contract for repositories with a package.json: pnpm is pinned, and tests exist.
++// A repository that looks green because it has no tests is the failure this prevents.
++import { readFileSync } from "node:fs";
++
++const pkg = JSON.parse(readFileSync("package.json", "utf8"));
++const missing = [];
++if (!pkg.packageManager?.startsWith("pnpm@")) missing.push('"packageManager": "pnpm@<version>"');
++if (!pkg.scripts?.test) missing.push('a "test" script');
++
++if (missing.length > 0) {
++  console.error(`package.json needs ${missing.join(" and ")}. See README, "CI contract".`);
++  process.exit(1);
++}
++console.log("package.json contract: ok");
+################ WORKTREE/BRANCH: claude-md-carryover (base origin/main d1eddf0)
+diff --git a/CLAUDE.md b/CLAUDE.md
+index cfcd7f3..1af4823 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -2,24 +2,37 @@
+ 
+ <One sentence: what this repo is and who uses it. Replace this line.>
+ 
+-## Stack
++## Non-negotiables
+ 
+-Node 24, pnpm. Scripts: `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build`. Deploy target: Vercel.
++1. Nothing exists until it is committed and pushed. Small, signed commits whose messages say why. Work reaches `main` only through a pull request.
++2. Never break the contract. Existing tests, public APIs, config formats and documented behaviour keep working unless an ADR in `docs/adr/` says otherwise.
++3. Secrets stay out of context. `.env*` files (except `.env.example`), SSH keys and credential files are never read, printed or edited. `.claude/hooks/guard.js` blocks the common paths; it is a backstop, not a boundary to probe.
++4. Verify before claiming done. Run the checks and report their real output. No output, no claim.
++5. Ask before anything irreversible: force-push, history rewrites, deleting branches, dropping data, production deploys, changing repository visibility.
++6. Finish every step, in order. Anything that catches the eye during the work is flagged in the report.
++7. If two rules conflict, stop and ask.
+ 
+-## Rules
++## How work flows
+ 
+-- Tests first. A change without a test is a NACK unless the maintainer agrees it is untestable.
+-- Changes to a public API, config format, or schema need an ADR and a migration before the code.
+-- No secrets in the repo. `.env.example` names variables; `.env` is gitignored and written by hand.
+-- Run the product through the browser MCP before claiming a change works.
+-- Spikes go in `prototypes/` with a README stating the hypothesis. Nothing in `src/` imports from there.
++Brainstorm → spec → plan (tasks as GitHub issues) → build test-first → maintainer review → pull request → CI green → the owner merges → ship → observe.
++
++- New feature or subsystem: `/superpowers:brainstorming` first. No code before an approved design.
++- Bug: `/superpowers:systematic-debugging`. Reproduce before fixing.
++- A finished slice of work ends with `/checkpoint`.
++- Evidence first: read the files, run the command, fetch the official docs page; search the web last. Label any claim you could not verify.
+ 
+-## Agent skills
++## Where things are
+ 
+-### Issue tracker
++- `.claude/`: this repo's gates (settings, hooks, the `maintainer` agent, the `checkpoint` skill, path-scoped rules). A change there changes every session in this repo, so it gets its own pull request.
++- `docs/adr/`: decisions, one per file. `CONTEXT.md`: vocabulary. Read both before exploring.
++- Issue tracker: GitHub Issues, see `docs/agents/issue-tracker.md`. Domain docs: `docs/agents/domain.md`.
+ 
+-GitHub Issues on this repo, driven through the `gh` CLI. See `docs/agents/issue-tracker.md`.
++## Stack
++
++<Fill in. For a Node app: Node 24, pnpm with `packageManager` pinned in package.json, scripts `typecheck`, `lint`, `test`, `build`. Deploy target: Vercel.>
+ 
+-### Domain docs
++## Project rules
+ 
+-Single-context: `CONTEXT.md` at the root plus `docs/adr/`. See `docs/agents/domain.md`.
++- Spikes go in `prototypes/` with a README stating the hypothesis. Nothing in `src/` imports from there.
++- Look at the running product in the browser before claiming a UI change works.
++- <Add the rules specific to this repo.>
+diff --git a/CONTEXT.md b/CONTEXT.md
+index 16be2a6..776e162 100644
+--- a/CONTEXT.md
++++ b/CONTEXT.md
+@@ -5,11 +5,13 @@ Vocabulary for this repo. Use these terms; avoid the synonyms noted. Add the pro
+ ## Shared across every repo
+ 
+ - **Ledger**: GitHub Issues on this repo. The durable record of what is planned, in progress, and decided.
+-- **Gate**: a deterministic check that blocks work: a hook, a permission rule, a CI job, a branch rule. Fixed, not argued with.
+-- **Baseline**: the free GitHub-native security set enabled at creation: Dependabot alerts, security updates, secret scanning, push protection.
++- **Gate**: a deterministic check that blocks work: a hook, a permission rule, a CI job, a ruleset. Fixed, not argued with.
++- **Baseline**: the free GitHub-native security set enabled at creation: Dependabot alerts, security updates, secret scanning, push protection. Public repos add dependency review and a ruleset.
+ - **Maintainer**: the review role (a subagent) that ACKs or NACKs a diff before it is committed.
+-- **Checkpoint**: the end-of-task ritual: verify, review, commit, update the ledger, write memory.
++- **Checkpoint**: the end-of-task ritual: verify, review, commit, push a branch, update the pull request and the ledger.
+ - **ADR**: an architecture decision record under `docs/adr/`. One decision per file, numbered, never edited after acceptance; superseded instead.
++- **Cloud session**: a Claude Code session on Anthropic's infrastructure, holding one clone of this repo. It sees only what is committed. Not "remote agent".
++- **Throwaway clone**: a local checkout that may be deleted at any time because everything in it is pushed. Not "workspace".
+ 
+ ## This project
+ 
+diff --git a/docs/agents/issue-tracker.md b/docs/agents/issue-tracker.md
+index b258aeb..5eb2a66 100644
+--- a/docs/agents/issue-tracker.md
++++ b/docs/agents/issue-tracker.md
+@@ -1,6 +1,6 @@
+ # Issue tracker: GitHub
+ 
+-Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all operations.
++Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all operations. Where `gh` is absent or signed out, as in a cloud session, run the same operation through the GitHub MCP tools (issue read, list, create, comment, update). The SessionStart hook says which path applies.
+ 
+ ## Conventions
+ 
+################ WORKTREE/BRANCH: gates-in-repo (base origin/main d1eddf0)
+################ WORKTREE/BRANCH: hooks-precommit-fix (base origin/main d1eddf0)
+diff --git a/.githooks/pre-commit b/.githooks/pre-commit
+index 7fc36da..a7e084f 100644
+--- a/.githooks/pre-commit
++++ b/.githooks/pre-commit
+@@ -1,8 +1,11 @@
+ #!/usr/bin/env bash
+-# Runs before every commit. Enable once per clone: git config core.hooksPath .githooks
+-# Gates: no secrets staged, no env file staged, typecheck passes, Dockerfiles lint. TODOs only warn: the ledger is the issue tracker.
++# Pre-commit gate. Enable once per clone: git config core.hooksPath .githooks
++# Blocks: staged secrets (gitleaks), staged env files, a failing typecheck, Dockerfile lint errors.
++# Warns: new TODO lines (the ledger is the issue tracker), and every gate skipped for a missing tool.
++# Tested by tests/pre-commit.test.sh.
+ set -euo pipefail
+ staged=$(git diff --cached --name-only --diff-filter=ACM)
++skipped() { echo "pre-commit: $1 is not installed; $2 skipped here. CI still runs it." >&2; }
+ 
+ if command -v gitleaks >/dev/null 2>&1; then
+   if gitleaks git --help >/dev/null 2>&1; then
+@@ -11,22 +14,26 @@ if command -v gitleaks >/dev/null 2>&1; then
+     gitleaks protect --staged --redact --no-banner               # older releases
+   fi
+ else
+-  echo "pre-commit: gitleaks is not installed (winget install Gitleaks.Gitleaks); secret scan skipped" >&2
++  skipped gitleaks "secret scan"
+ fi
+ 
+-if printf '%s\n' "$staged" | grep -E '(^|/)\.env(\.[^/]+)?$' | grep -vE '\.env\.example$' >/dev/null; then
++if printf '%s\n' "$staged" | grep -E '(^|/)\.env(\.[^/]+)?$' | grep -vqE '\.env\.(example|sample|template)$'; then
+   echo "pre-commit: refusing to commit an env file. Unstage it; values never enter git." >&2
+   exit 1
+ fi
+ 
+-todos=$(git diff --cached -U0 | grep -E '^\+.*\b(TODO|FIXME|XXX)\b' | wc -l | tr -d ' ')
+-[[ "$todos" -gt 0 ]] && echo "pre-commit: $todos new TODO/FIXME line(s). File an issue and reference it, or remove them." >&2
++todos=$(git diff --cached -U0 | grep -cE '^\+.*\b(TODO|FIXME|XXX)\b' || true)
++if (( todos > 0 )); then
++  echo "pre-commit: $todos new TODO/FIXME line(s). File an issue and reference it, or remove them." >&2
++fi
+ 
+-if [ -f package.json ] && command -v pnpm >/dev/null 2>&1 && grep -q '"typecheck"' package.json; then
+-  pnpm typecheck
++if [[ -f package.json ]] && grep -q '"typecheck"' package.json; then
++  if command -v pnpm >/dev/null 2>&1; then pnpm typecheck; else skipped pnpm typecheck; fi
+ fi
+ 
+ while IFS= read -r f; do
+-  [[ -z "$f" ]] && continue
+-  case "$(basename "$f")" in Dockerfile*) command -v hadolint >/dev/null 2>&1 && hadolint "$f" || true ;; esac
++  case "$(basename "$f")" in
++    Dockerfile*)
++      if command -v hadolint >/dev/null 2>&1; then hadolint "$f"; else skipped hadolint "Dockerfile lint of $f"; fi ;;
++  esac
+ done <<< "$staged"
+diff --git a/.gitattributes b/.gitattributes
+new file mode 100644
+index 0000000..d8859f0
+--- /dev/null
++++ b/.gitattributes
+@@ -0,0 +1,6 @@
++# LF everywhere, whatever the machine's core.autocrlf says. Hooks and scripts break on CRLF.
++* text=auto eol=lf
++*.png binary
++*.jpg binary
++*.ico binary
++*.woff2 binary
+diff --git a/tests/pre-commit.test.sh b/tests/pre-commit.test.sh
+new file mode 100644
+index 0000000..4b3d70a
+--- /dev/null
++++ b/tests/pre-commit.test.sh
+@@ -0,0 +1,47 @@
++#!/usr/bin/env bash
++# Exercises .githooks/pre-commit in a throwaway repository. Run: bash tests/pre-commit.test.sh
++set -euo pipefail
++hook="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/.githooks/pre-commit"
++tmp="$(mktemp -d)"
++trap 'rm -rf "$tmp"' EXIT
++repo="$tmp/repo"
++git init -q "$repo"
++cd "$repo"
++git config user.email test@example.invalid
++git config user.name test
++fails=0
++
++# expect <exit-code> <description>: runs the hook against whatever is staged now.
++expect() {
++  local want="$1" desc="$2" got=0
++  bash "$hook" >"$tmp/out" 2>&1 || got=$?
++  if [[ "$got" == "$want" ]]; then
++    echo "ok   $desc"
++  else
++    echo "FAIL $desc: want exit $want, got $got"
++    sed 's/^/     /' "$tmp/out"
++    fails=$((fails + 1))
++  fi
++}
++unstage_all() { git read-tree --empty; }
++
++expect 0 "nothing staged"
++
++echo "hello" > plain.txt; git add plain.txt
++expect 0 "a plain file without TODOs"
++
++echo "x = 1 # TODO later" > todo.txt; git add todo.txt
++expect 0 "a TODO only warns"
++grep -q "new TODO/FIXME" "$tmp/out" || { echo "FAIL the TODO warning is missing"; fails=$((fails + 1)); }
++
++unstage_all; echo "API_URL=" > .env.example; git add .env.example
++expect 0 ".env.example is allowed"
++
++unstage_all; echo "A=1" > .env; git add -f .env
++expect 1 ".env is refused"
++
++unstage_all; mkdir -p app; echo "A=1" > app/.env.local; git add -f app/.env.local
++expect 1 "a nested .env.local is refused"
++
++unstage_all
++if (( fails == 0 )); then echo "pre-commit tests: all passed"; else echo "pre-commit tests: $fails failed"; exit 1; fi
+################ WORKTREE/BRANCH: starter-hygiene (base origin/main d1eddf0)
+diff --git a/.gitignore b/.gitignore
+index f49a599..8ef1ee1 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -10,3 +10,15 @@ coverage/
+ !.env.example
+ .DS_Store
+ Thumbs.db
++
++# Claude Code: per-task worktrees and personal overrides stay local.
++.claude/worktrees/
++.claude/settings.local.json
++CLAUDE.local.md
++
++# Key material never enters git.
++*.pem
++*.key
++*.p12
++id_rsa*
++id_ed25519*
+diff --git a/README.md b/README.md
+index 0ba5191..debd9bf 100644
+--- a/README.md
++++ b/README.md
+@@ -1,31 +1,67 @@
+ # project-template
+ 
+-The starting point for every new repo. Copy it, rename it, and the gates are green before the first line of product code.
++The starting point for a new repository. A repository is created from it once, and from then on it owns its copy and changes it freely. Nothing syncs back or across ([ADR-0004](docs/adr/0004-cloud-first-repo-isolated-workspace.md)).
+ 
+-## Start a new repo
++Every repository made from it carries its own gates, so they hold in a cloud session, on any machine and in CI: permission rules and a secret guard hook in `.claude/`, a pre-commit secret scan, and a `universal` CI job that a ruleset makes required.
++
++## Create a repository
+ 
+ ```bash
+-cp -r ~/repos/project-template ~/repos/<name> && cd ~/repos/<name>
+-git init && git config core.hooksPath .githooks
+-gh repo create <name> --public --source . --push
+-gh api -X PUT repos/<you>/<name>/vulnerability-alerts
+-gh api -X PUT repos/<you>/<name>/automated-security-fixes
++gh repo create <name> --template git-commit-duke/project-template --public --clone
++cd <name>
++git config core.hooksPath .githooks
+ ```
+ 
+-Then edit `CLAUDE.md` and `CONTEXT.md` for the project, enable CodeQL default setup under the repo's Security settings once there is code to scan, and run `/superpowers:brainstorming` before writing code.
++Use `--private` for a repository that must stay private. On GitHub Free, a private repository gets no ruleset, secret scanning or dependency review ([ADR-0001](docs/adr/0001-github-native-security-baseline.md)), so its only gates are the hooks and CI.
+ 
+-## What is inside
++Then:
++
++1. Edit `CLAUDE.md` and `CONTEXT.md` for the project, and add the plugins its stack needs to `enabledPlugins` in `.claude/settings.json` (for example `vercel@claude-plugins-official`).
++2. For a public repository, turn on the baseline and the ruleset (next section).
++3. Run `/superpowers:brainstorming` before writing any code.
++
++## Baseline and ruleset (public repositories)
++
++```bash
++repo=git-commit-duke/<name>
++gh api -X PUT "repos/$repo/vulnerability-alerts"
++gh api -X PUT "repos/$repo/automated-security-fixes"
++gh api -X PUT "repos/$repo/private-vulnerability-reporting"
++gh api -X PATCH "repos/$repo" \
++  -f "security_and_analysis[secret_scanning][status]=enabled" \
++  -f "security_and_analysis[secret_scanning_push_protection][status]=enabled"
++gh repo edit "$repo" --enable-merge-commit --enable-squash-merge=false --enable-rebase-merge=false --delete-branch-on-merge
++gh api -X POST "repos/$repo/rulesets" --input .github/rulesets/main.json
++```
++
++The ruleset in `.github/rulesets/main.json` protects the default branch. It requires a pull request, merge commits only, signed commits and a green `universal` check, and it forbids force pushes and deletion. Merge commits keep each signed commit intact; squash and rebase would replace or drop the signatures.
+ 
+-- `CLAUDE.md`, `CONTEXT.md`, `docs/adr/`, `docs/agents/`: the ledger and domain-doc conventions from the framework.
+-- `.github/workflows/ci.yml`: typecheck, lint, test, build, and dependency review on every pull request. Written for Node and pnpm; adapt the `checks` job for other stacks.
+-- `.github/dependabot.yml`: weekly dependency and Actions updates, minor and patch grouped.
+-- `.githooks/pre-commit`: gitleaks secret scan and typecheck before every commit. Enable per clone with `git config core.hooksPath .githooks`.
+-- `.env.example`: variable names only, never values.
++## Cloud sessions
+ 
+-The CI job expects `pnpm typecheck`, `pnpm lint`, `pnpm test`, and `pnpm build` scripts. Define them in `package.json` on day one, even if some are no-ops at first.
++- One repository per session. A session holding several repositories ignores their permission rules and hooks ([ADR-0004](docs/adr/0004-cloud-first-repo-isolated-workspace.md)).
++- Environment network access: **Trusted**, which reaches GitHub and the package registries. Store no secrets in the environment.
++- Environment setup script:
++
++```bash
++git config core.hooksPath .githooks
++if [ -f package.json ]; then corepack enable && pnpm install --frozen-lockfile; fi
++```
++
++## CI contract
++
++- `universal` runs on every pull request: gitleaks, actionlint, zizmor, Semgrep, and the repository's self-tests (`tests/*.test.sh`, `node --test .claude/hooks/`). It is the required check.
++- `node` switches on when a `package.json` exists. It requires `"packageManager": "pnpm@<version>"` and a `test` script, then runs install, typecheck, lint, test and build, skipping any of those scripts that does not exist.
++- `dependency-review` runs on pull requests in public repositories.
++- Actions are pinned to full commit SHAs, and Dependabot proposes the updates. To pin a newly added action, run `pinact run`.
++
++## What is inside
+ 
+-The pnpm setup step in CI reads the pnpm version from `"packageManager": "pnpm@<version>"` in `package.json`. Set it before the first push or the `checks` job fails at setup.
++- `.claude/`: `settings.json` (permissions, hooks, plugins), `hooks/guard.js` (secret and lockfile guard), `hooks/session-start.sh` (the ledger), `agents/maintainer.md`, `skills/checkpoint/`, and path-scoped `rules/`.
++- `.githooks/pre-commit`: refuses staged secrets and env files, runs the typecheck, and lints Dockerfiles. Tested by `tests/pre-commit.test.sh`.
++- `.github/`: CI, Dependabot, the ruleset, and the pull request template.
++- `CLAUDE.md`, `CONTEXT.md`, `docs/adr/`, `docs/agents/`: rules, vocabulary, decisions, and how agents use the issue tracker.
++- `SECURITY.md`, `LICENSE`, `.env.example` (variable names only, never values).
+ 
+ ## Path-scoped rules
+ 
+-`.claude/rules/` holds guidance that loads only when a matching file is touched: `server.md`, `ui.md`, `tests.md`, `web-security.md`, `prototypes.md`. Spikes go in `prototypes/`; nothing in `src/` imports from there.
++`.claude/rules/` holds guidance that loads only when a matching file is touched: `server.md`, `ui.md`, `tests.md`, `web-security.md`, `prototypes.md`, `adr.md`, `shell.md`. Spikes go in `prototypes/`; nothing in `src/` imports from there.
+diff --git a/SECURITY.md b/SECURITY.md
+new file mode 100644
+index 0000000..a174734
+--- /dev/null
++++ b/SECURITY.md
+@@ -0,0 +1,11 @@
++# Security policy
++
++## Reporting a vulnerability
++
++Report it privately: open the repository's **Security** tab and choose **Report a vulnerability**. Please do not open a public issue.
++
++This is a personal project maintained by one person. Expect an acknowledgement within 7 days. There is no bounty.
++
++## Supported versions
++
++Only the default branch is supported.

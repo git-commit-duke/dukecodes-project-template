@@ -1,0 +1,30 @@
+node_modules/
+dist/
+build/
+.next/
+.vercel/
+coverage/
+*.log
+.DS_Store
+Thumbs.db
+
+# Env files hold values; only the name-only templates are tracked.
+.env
+.env.*
+.env-*
+.envrc
+!.env.example
+!.env.sample
+!.env.template
+
+# Key material never enters git.
+*.pem
+*.key
+*.p12
+id_rsa
+id_ed25519
+
+# Claude Code: per-task worktrees and personal overrides stay local.
+.claude/worktrees/
+.claude/settings.local.json
+CLAUDE.local.md

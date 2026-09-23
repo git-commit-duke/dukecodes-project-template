@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# Pre-commit gate. SessionStart enables it (git config core.hooksPath .githooks); new clones can run that by hand.
+# Blocks: staged secret files (.claude/hooks/secret-paths.txt), staged secrets (gitleaks), a failing typecheck, Dockerfile lint errors.
+# Warns: new TODO lines, and every gate skipped because its tool is missing.
+# Tested by .githooks/pre-commit.test.sh. Tool seams: GITLEAKS_BIN, HADOLINT_BIN, PNPM_BIN.
+set -euo pipefail
+# NUL-separated: git quotes any path holding non-ASCII bytes ("caf\303\251/.env"), and a quoted name
+# would slip past every name check below.
+mapfile -d '' -t staged < <(git diff --cached --name-only --diff-filter=ACMR -z)
+skip() { echo "pre-commit: SKIP $1 (not installed): $2 skipped here; CI still runs it." >&2; }
+# tool <override> <name>: prints the executable to use, or nothing when it is missing.
+tool() {
+  local override="$1" name="$2"
+  if [[ -n "$override" ]]; then [[ -x "$override" ]] && printf '%s' "$override"; return 0; fi
+  if command -v "$name" >/dev/null 2>&1; then command -v "$name"; return 0; fi
+  if [[ -x "$HOME/.local/bin/$name" ]]; then printf '%s' "$HOME/.local/bin/$name"; fi
+  return 0
+}
+
+if [[ -f .claude/hooks/staged-secrets.mjs ]] && command -v node >/dev/null 2>&1; then
+  rc=0
+  secrets=$(printf '%s\0' "${staged[@]}" | node .claude/hooks/staged-secrets.mjs) || rc=$?
+  if (( rc == 1 )); then
+    echo "pre-commit: refusing to commit secret files (listed in .claude/hooks/secret-paths.txt):" >&2
+    printf '  %s\n' "$secrets" >&2
+    exit 1
+  elif (( rc != 0 )); then
+    echo "pre-commit: the secret-file check failed (exit $rc), so the commit is refused." >&2
+    exit 1
+  fi
+else
+  echo "pre-commit: node or .claude/hooks/staged-secrets.mjs is missing; using the minimal built-in env-file check." >&2
+  if printf '%s\n' "${staged[@]}" | grep -iE '(^|/)\.env(rc|[.-][^/]*)?$' | grep -viE '(^|/)\.env\.(example|sample|template)$' >/dev/null; then
+    echo "pre-commit: refusing to commit an env file. Unstage it; values never enter git." >&2
+    exit 1
+  fi
+fi
+
+gitleaks_bin=$(tool "${GITLEAKS_BIN:-}" gitleaks)
+if [[ -n "$gitleaks_bin" ]]; then
+  "$gitleaks_bin" git --pre-commit --staged --redact --no-banner
+else
+  skip gitleaks "secret scan"
+fi
+
+todos=$(git diff --cached -U0 | grep -cE '^\+.*\b(TODO|FIXME|XXX)\b' || true)
+if (( todos > 0 )); then
+  echo "pre-commit: $todos new TODO/FIXME line(s). File an issue and reference it, or remove them." >&2
+fi
+
+if [[ -f package.json ]] && grep '"typecheck"' package.json >/dev/null; then
+  pnpm_bin=$(tool "${PNPM_BIN:-}" pnpm)
+  if [[ -n "$pnpm_bin" ]]; then "$pnpm_bin" typecheck; else skip pnpm typecheck; fi
+fi
+
+for f in "${staged[@]}"; do
+  case "$(basename "$f")" in
+    Dockerfile*)
+      hadolint_bin=$(tool "${HADOLINT_BIN:-}" hadolint)
+      if [[ -n "$hadolint_bin" ]]; then "$hadolint_bin" "$f"; else skip hadolint "Dockerfile lint of $f"; fi ;;
+  esac
+done

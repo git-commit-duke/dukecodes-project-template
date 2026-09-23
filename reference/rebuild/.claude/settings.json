@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(git status *)", "PowerShell(git status *)",
+      "Bash(git diff *)", "PowerShell(git diff *)",
+      "Bash(git log *)", "PowerShell(git log *)",
+      "Bash(git show *)", "PowerShell(git show *)",
+      "Bash(gh issue view *)", "PowerShell(gh issue view *)",
+      "Bash(gh issue list *)", "PowerShell(gh issue list *)",
+      "Bash(gh pr view *)", "PowerShell(gh pr view *)",
+      "Bash(gh pr checks *)", "PowerShell(gh pr checks *)"
+    ],
+    "ask": [
+      "Bash(ssh *)", "PowerShell(ssh *)",
+      "Bash(scp *)", "PowerShell(scp *)",
+      "Bash(tailscale set *)", "PowerShell(tailscale set *)",
+      "Bash(tailscale up *)", "PowerShell(tailscale up *)",
+      "Bash(tailscale down *)", "PowerShell(tailscale down *)",
+      "Bash(tailscale serve *)", "PowerShell(tailscale serve *)",
+      "Bash(tailscale funnel *)", "PowerShell(tailscale funnel *)",
+      "Bash(tailscale file *)", "PowerShell(tailscale file *)",
+      "Bash(git branch -D *)", "PowerShell(git branch -D *)",
+      "Bash(git push --delete *)", "PowerShell(git push --delete *)",
+      "Bash(git clean *)", "PowerShell(git clean *)",
+      "Bash(gh pr merge *)", "PowerShell(gh pr merge *)",
+      "Bash(gh api *merge*)", "PowerShell(gh api *merge*)"
+    ],
+    "deny": [
+      "Read(//**/.env)", "Read(//**/.env.local)", "Read(//**/.env.development)", "Read(//**/.env.production)",
+      "Read(//**/.env.test)", "Read(//**/.env.staging)", "Read(//**/.envrc)",
+      "Read(~/.ssh/**)", "Read(~/.claude/.credentials.json)",
+      "Edit(//**/pnpm-lock.yaml)", "Edit(//**/package-lock.json)", "Edit(//**/yarn.lock)", "Edit(//**/bun.lock)", "Edit(//**/bun.lockb)",
+      "Bash(git push --force*)", "PowerShell(git push --force*)",
+      "Bash(git push -f*)", "PowerShell(git push -f*)",
+      "Bash(git push * --force*)", "PowerShell(git push * --force*)",
+      "Bash(git push * -f)", "PowerShell(git push * -f)",
+      "Bash(git push * +*)", "PowerShell(git push * +*)",
+      "Bash(git reset --hard*)", "PowerShell(git reset --hard*)",
+      "Bash(rm -rf *)", "PowerShell(rm -rf *)",
+      "Bash(rm -fr *)", "PowerShell(rm -fr *)",
+      "Bash(tailscale logout*)", "PowerShell(tailscale logout*)",
+      "Bash(tailscale lock *)", "PowerShell(tailscale lock *)"
+    ],
+    "disableBypassPermissionsMode": "disable"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Edit|Write|MultiEdit|NotebookEdit|Grep|Glob|Bash|PowerShell",
+        "hooks": [{ "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.mjs\" || exit 2", "timeout": 10 }]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|compact",
+        "hooks": [{ "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh\"", "timeout": 300 }]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true,
+    "semgrep@claude-plugins-official": true,
+    "mattpocock-skills@claude-plugins-official": true,
+    "claude-md-management@claude-plugins-official": true,
+    "commit-commands@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "pr-review-toolkit@claude-plugins-official": true,
+    "context7@claude-plugins-official": true,
+    "project-artifact@claude-plugins-official": true
+  }
+}

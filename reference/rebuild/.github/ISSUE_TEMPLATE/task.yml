@@ -1,0 +1,7 @@
+name: Task
+description: A slice of work one session can finish
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Outcome
