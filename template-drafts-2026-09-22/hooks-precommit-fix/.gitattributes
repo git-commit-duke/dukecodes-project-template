@@ -1,0 +1,6 @@
+# LF everywhere, whatever the machine's core.autocrlf says. Hooks and scripts break on CRLF.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff2 binary

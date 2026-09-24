@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Pre-commit gate. Enable once per clone: git config core.hooksPath .githooks
+# Blocks: staged secrets (gitleaks), staged env files, a failing typecheck, Dockerfile lint errors.
+# Warns: new TODO lines (the ledger is the issue tracker), and every gate skipped for a missing tool.
+# Tested by tests/pre-commit.test.sh.
+set -euo pipefail
+staged=$(git diff --cached --name-only --diff-filter=ACM)
+skipped() { echo "pre-commit: $1 is not installed; $2 skipped here. CI still runs it." >&2; }
+
+if command -v gitleaks >/dev/null 2>&1; then
+  if gitleaks git --help >/dev/null 2>&1; then
+    gitleaks git --pre-commit --staged --redact --no-banner      # gitleaks 8.19 and later
+  else
+    gitleaks protect --staged --redact --no-banner               # older releases
+  fi
+else
+  skipped gitleaks "secret scan"
+fi
+
+if printf '%s\n' "$staged" | grep -E '(^|/)\.env(\.[^/]+)?$' | grep -vqE '\.env\.(example|sample|template)$'; then
+  echo "pre-commit: refusing to commit an env file. Unstage it; values never enter git." >&2
+  exit 1
+fi
+
+todos=$(git diff --cached -U0 | grep -cE '^\+.*\b(TODO|FIXME|XXX)\b' || true)
+if (( todos > 0 )); then
+  echo "pre-commit: $todos new TODO/FIXME line(s). File an issue and reference it, or remove them." >&2
+fi
+
+if [[ -f package.json ]] && grep -q '"typecheck"' package.json; then
+  if command -v pnpm >/dev/null 2>&1; then pnpm typecheck; else skipped pnpm typecheck; fi
+fi
+
+while IFS= read -r f; do
+  case "$(basename "$f")" in
+    Dockerfile*)
+      if command -v hadolint >/dev/null 2>&1; then hadolint "$f"; else skipped hadolint "Dockerfile lint of $f"; fi ;;
+  esac
+done <<< "$staged"
