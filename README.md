@@ -1,31 +1,49 @@
-# project-template
+# dukecodes-project-template
 
-The starting point for every new repo. Copy it, rename it, and the gates are green before the first line of product code.
+Base for every new DevSecOps project, lab, workspace, and device setup.
+Security gates are on from the first commit: secret scanning, SAST, dependency and IaC scanning, GitHub Actions audit, and Claude Code guardrails.
 
-## Start a new repo
+## Start a new project
 
-```bash
-cp -r ~/repos/project-template ~/repos/<name> && cd ~/repos/<name>
-git init && git config core.hooksPath .githooks
-gh repo create <name> --public --source . --push
-gh api -X PUT repos/<you>/<name>/vulnerability-alerts
-gh api -X PUT repos/<you>/<name>/automated-security-fixes
+1. On GitHub: **Use this template** → **Create a new repository** (private by default).
+2. Clone it, then:
+
+   ```bash
+   make init NAME=my-project   # renames the package, resets README title
+   make setup                  # uv sync + pre-commit hooks installed
+   make check                  # lint + test + scan, same gates as CI
+   ```
+
+3. Fill in `CLAUDE.md` line 3 (what the repo is) and `pyproject.toml` authors.
+4. Record the first real decision in `docs/adr/`.
+
+New device or cloud workspace with no local tooling: open in the dev container (`.devcontainer/`) or a Codespace. Everything in `make setup` runs inside it.
+
+## What runs where
+
+| Gate | Local (pre-commit) | CI |
+|------|--------------------|----|
+| Secrets (gitleaks) | yes | yes |
+| Python lint/format (ruff) | yes | yes |
+| Tests (pytest) | `make test` | yes |
+| Shell (shellcheck), YAML (yamllint) | yes | yes |
+| Actions lint + audit (actionlint, zizmor) | yes | yes |
+| SAST (semgrep) | `make scan` | yes |
+| Deps + IaC + secrets (trivy fs/config) | `make scan` | yes |
+
+## Layout
+
+```
+.claude/            settings.json (deny/ask rules, hooks), hooks/, rules/ (path-scoped)
+.devcontainer/      reproducible workspace for new devices/Codespaces
+.github/            CI, Dependabot, CODEOWNERS, PR + issue templates
+docs/adr/           decisions (context, decision, pros, cons)
+scripts/            init + helper scripts
+src/app/, tests/    Python package (default stack; delete if unused)
 ```
 
-Then edit `CLAUDE.md` and `CONTEXT.md` for the project, enable CodeQL default setup under the repo's Security settings once there is code to scan, and run `/superpowers:brainstorming` before writing code.
+Non-Python project: delete `src/`, `tests/`, `pyproject.toml`, `uv.lock`, the `test` CI job, and the ruff hooks. Keep everything else.
 
-## What is inside
+## Keeping it current
 
-- `CLAUDE.md`, `CONTEXT.md`, `docs/adr/`, `docs/agents/`: the ledger and domain-doc conventions from the framework.
-- `.github/workflows/ci.yml`: typecheck, lint, test, build, and dependency review on every pull request. Written for Node and pnpm; adapt the `checks` job for other stacks.
-- `.github/dependabot.yml`: weekly dependency and Actions updates, minor and patch grouped.
-- `.githooks/pre-commit`: gitleaks secret scan and typecheck before every commit. Enable per clone with `git config core.hooksPath .githooks`.
-- `.env.example`: variable names only, never values.
-
-The CI job expects `pnpm typecheck`, `pnpm lint`, `pnpm test`, and `pnpm build` scripts. Define them in `package.json` on day one, even if some are no-ops at first.
-
-The pnpm setup step in CI reads the pnpm version from `"packageManager": "pnpm@<version>"` in `package.json`. Set it before the first push or the `checks` job fails at setup.
-
-## Path-scoped rules
-
-`.claude/rules/` holds guidance that loads only when a matching file is touched: `server.md`, `ui.md`, `tests.md`, `web-security.md`, `prototypes.md`. Spikes go in `prototypes/`; nothing in `src/` imports from there.
+Dependabot opens weekly PRs for Actions (SHA pins), uv, Docker, and dev container features. `make update-hooks` bumps pre-commit revs.

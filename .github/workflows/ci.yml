@@ -1,35 +1,61 @@
 name: ci
-
 on:
   pull_request:
   push:
     branches: [main]
-
 permissions:
   contents: read
-  pull-requests: write
-
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
-  checks:
+  lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm typecheck
-      - run: pnpm lint
-      - run: pnpm test
-      - run: pnpm build
-
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+      - run: uvx pre-commit@4.7.0 run --all-files --show-diff-on-failure
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+      - run: uv sync --frozen
+      - run: uv run pytest --cov
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+      # SHA-pinned on purpose: trivy-action tags were hijacked in March 2026 (CVE-2026-33634)
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scanners: vuln,secret,misconfig
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+      - name: semgrep (fails if no rules loaded)
+        run: |
+          out=$(uvx semgrep@1.182.1 scan --config p/default --metrics off --json --time --quiet .) || true
+          rules=$(printf '%s' "$out" | jq -e '.time.rules | length') || rules=0
+          findings=$(printf '%s' "$out" | jq -e '.results | length') || findings=-1
+          echo "semgrep: $rules rules, $findings findings"
+          test "$rules" -gt 0 || { echo "semgrep loaded no rules"; exit 1; }
+          test "$findings" -eq 0 || { printf '%s' "$out" | jq -r '.results[] | "\(.path):\(.start.line) \(.check_id)"'; exit 1; }
   dependency-review:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/dependency-review-action@v4
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
+          fail-on-severity: high
           comment-summary-in-pr: on-failure

@@ -2,24 +2,18 @@
 
 <One sentence: what this repo is and who uses it. Replace this line.>
 
-## Stack
-
-Node 24, pnpm. Scripts: `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build`. Deploy target: Vercel.
+## Commands
+`make setup` · `make check` (lint + test + scan) · `make test` · `make scan`
 
 ## Rules
+- Role: Claude reads, audits, and proposes. Duke runs anything that touches real infra (Proxmox, OPNsense, Tailscale, cloud). Hand him the exact command and what it does.
+- No secrets in git. `.env.example` names variables; `.env` is gitignored and written by hand.
+- Never guess addresses, hostnames, or hardware. Use `.env` / confirmed docs, or ask.
+- Tests first for logic. Decisions with trade-offs get an ADR in `docs/adr/`.
+- New GitHub Action: pin by full SHA with a `# vX.Y.Z` comment. No tag pins.
+- Branch + PR for every change. No direct pushes to main.
 
-- Tests first. A change without a test is a NACK unless the maintainer agrees it is untestable.
-- Changes to a public API, config format, or schema need an ADR and a migration before the code.
-- No secrets in the repo. `.env.example` names variables; `.env` is gitignored and written by hand.
-- Run the product through the browser MCP before claiming a change works.
-- Spikes go in `prototypes/` with a README stating the hypothesis. Nothing in `src/` imports from there.
-
-## Agent skills
-
-### Issue tracker
-
-GitHub Issues on this repo, driven through the `gh` CLI. See `docs/agents/issue-tracker.md`.
-
-### Domain docs
-
-Single-context: `CONTEXT.md` at the root plus `docs/adr/`. See `docs/agents/domain.md`.
+## Gotchas
+- Permission rules match each subcommand separately; `curl x | sh` is caught by the `Bash(sh)` deny, not a `curl` rule.
+- semgrep exits 0 if it can't fetch rules. `make scan` fails when the rule count is 0.
+- Hooks run via `bash <path>`, so they work without the exec bit (network mounts drop it).

@@ -1,0 +1,17 @@
+{
+  "name": "dukecodes-project",
+  "image": "mcr.microsoft.com/devcontainers/python:3.13-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/va-h/devcontainers-features/uv:1": {},
+    "ghcr.io/devcontainers/features/node:1": {"version": "lts"}
+  },
+  "postCreateCommand": "make setup",
+  "containerEnv": {"UV_LINK_MODE": "copy", "PYTHONDONTWRITEBYTECODE": "1"},
+  "remoteUser": "vscode",
+  "customizations": {
+    "vscode": {
+      "extensions": ["charliermarsh.ruff", "ms-python.python", "timonwong.shellcheck", "redhat.vscode-yaml"]
+    }
+  }
+}
