@@ -1,0 +1,249 @@
+{
+ "title": "dukecodes project template",
+ "eyebrow": "Mission control · project template",
+ "headline": [
+  "Start a secure project.",
+  "Every gate on from commit one."
+ ],
+ "lede": "This is the starting point for every dukecodes project and lab. It comes with security checks, tests and guardrails for AI helpers already switched on, so you learn good habits from the first day. Every step below says why it matters, what to type, how to check it worked, and how to undo it. No tech background assumed.",
+ "stats": [
+  {
+   "v": "7",
+   "k": "security scanners"
+  },
+  {
+   "v": "0",
+   "k": "tag-pinned actions"
+  },
+  {
+   "v": "1 cmd",
+   "k": "to run every check"
+  }
+ ],
+ "stages": [
+  {
+   "id": "get",
+   "title": "Get your copy",
+   "intro": "Make your own repository from this template.",
+   "steps": [
+    {
+     "id": "get-01",
+     "title": "Create a repo from the template",
+     "risk": "safe",
+     "label": "FACT",
+     "time": "2 min",
+     "why": "A template copies every file into a fresh repository with no shared history, so your project starts clean.",
+     "do": "On GitHub, open this repo and press Use this template, then Create a new repository. Pick Private unless you mean to share it.",
+     "check": "Your new repo shows the same files and a single first commit.",
+     "undo": "Settings › Danger zone › Delete this repository."
+    },
+    {
+     "id": "get-02",
+     "title": "Copy it to your computer",
+     "risk": "safe",
+     "label": "FACT",
+     "time": "1 min",
+     "why": "You edit and test on your own machine, then send changes back. `git clone` makes that local copy.",
+     "do": "Replace YOUR-REPO with the name you picked.",
+     "do_cmd": "git clone https://github.com/YOUR-USER/YOUR-REPO.git\ncd YOUR-REPO",
+     "check": "`git status` says `On branch main` and `nothing to commit`.",
+     "undo": "Delete the folder. Nothing on GitHub changes."
+    }
+   ]
+  },
+  {
+   "id": "setup",
+   "title": "Make it yours",
+   "intro": "Rename the starter and switch on the local checks.",
+   "steps": [
+    {
+     "id": "setup-01",
+     "title": "Rename the project",
+     "risk": "caution",
+     "label": "FACT",
+     "time": "1 min",
+     "why": "The starter code is called `app`. Renaming once now keeps names consistent everywhere.",
+     "do": "Use lowercase letters, digits and dashes.",
+     "do_cmd": "make init NAME=my-project",
+     "check": "`src/` now holds a folder named after your project and the README title changed.",
+     "undo": "`git checkout -- . && git clean -fd` restores the template files."
+    },
+    {
+     "id": "setup-02",
+     "title": "Install tools and git hooks",
+     "risk": "safe",
+     "label": "FACT",
+     "time": "3 min",
+     "why": "Hooks run the security checks every time you commit, so a leaked password is caught on your laptop, not after it reaches GitHub.",
+     "do": "Needs `uv` installed (one line from astral.sh). Or open the repo in the dev container, which runs this for you.",
+     "do_cmd": "make setup",
+     "check": "Last line reads `pre-commit installed at .git/hooks/pre-commit`.",
+     "undo": "`uvx pre-commit uninstall` removes the hooks."
+    },
+    {
+     "id": "setup-03",
+     "title": "Run every check",
+     "risk": "safe",
+     "label": "FACT",
+     "time": "2 min",
+     "why": "Proves the tools work before you write anything. If this passes, CI will too.",
+     "do_cmd": "make check",
+     "check": "Every line says `Passed` and tests report `passed`.",
+     "warn": "If the scan step says semgrep loaded no rules, your network blocks semgrep.dev. That is a failure, not a pass."
+    }
+   ]
+  },
+  {
+   "id": "ship",
+   "title": "Ship a change safely",
+   "intro": "The loop you repeat for every change.",
+   "steps": [
+    {
+     "id": "ship-01",
+     "title": "Work on a branch",
+     "risk": "safe",
+     "label": "FACT",
+     "time": "1 min",
+     "why": "`main` is what everyone trusts. Branches let you experiment without breaking it. The hooks refuse commits straight to main.",
+     "do_cmd": "git switch -c my-first-change",
+     "check": "`git branch` shows a star next to `my-first-change`.",
+     "undo": "`git switch main && git branch -D my-first-change`."
+    },
+    {
+     "id": "ship-02",
+     "title": "Open a pull request and watch CI",
+     "risk": "safe",
+     "label": "FACT",
+     "time": "5 min",
+     "why": "A pull request (PR) runs every gate on GitHub's machines and gives you a record to show in interviews.",
+     "do": "Commit, push the branch, then open the PR link git prints. Fill in the template's security checklist.",
+     "do_cmd": "git add -A\ngit commit -m \"Describe the change\"\ngit push -u origin my-first-change",
+     "check": "The PR shows green checks for lint, test, scan and dependency-review.",
+     "undo": "Close the PR. The branch can be deleted from the PR page."
+    },
+    {
+     "id": "ship-03",
+     "title": "Record the decision",
+     "risk": "safe",
+     "label": "INFERENCE",
+     "time": "10 min",
+     "why": "Interviewers ask why, not what. A short decision record (ADR) per trade-off is your answer, written while it's fresh.",
+     "do": "Copy `docs/adr/0000-template.md` to the next number and fill in Context, Decision, Pros, Cons.",
+     "check": "The ADR is in the PR and linked from its description.",
+     "undo": "Mark it `superseded` in a later ADR. Never delete history."
+    }
+   ]
+  }
+ ],
+ "gates": [
+  {
+   "name": "gitleaks",
+   "stops": "Passwords, tokens and keys committed by mistake.",
+   "where": "commit + CI"
+  },
+  {
+   "name": "semgrep",
+   "stops": "Risky code patterns (SAST): injection, unsafe calls. Fails if no rules load.",
+   "where": "make scan + CI"
+  },
+  {
+   "name": "trivy",
+   "stops": "Known-vulnerable dependencies, secrets in files, insecure Docker/IaC settings.",
+   "where": "make scan + CI"
+  },
+  {
+   "name": "zizmor + actionlint",
+   "stops": "Unsafe or broken GitHub Actions workflows.",
+   "where": "commit + CI"
+  },
+  {
+   "name": "ruff, shellcheck, yamllint",
+   "stops": "Bugs and sloppy code in Python, shell scripts and YAML.",
+   "where": "commit + CI"
+  },
+  {
+   "name": "dependency-review",
+   "stops": "A PR that adds a dependency with a high-severity CVE.",
+   "where": "CI on PRs"
+  },
+  {
+   "name": "Claude guardrails",
+   "stops": "AI helper reading secrets, force-pushing, or changing real infrastructure.",
+   "where": ".claude/settings.json"
+  }
+ ],
+ "glossary": [
+  {
+   "term": "Repository (repo)",
+   "def": "A project folder with its full change history, stored by git."
+  },
+  {
+   "term": "Commit",
+   "def": "A saved snapshot of your changes with a message saying why."
+  },
+  {
+   "term": "Branch",
+   "def": "A separate line of work. Merge it into main when it's ready."
+  },
+  {
+   "term": "Pull request (PR)",
+   "def": "A request to merge a branch. Where checks run and reviews happen."
+  },
+  {
+   "term": "CI",
+   "def": "Continuous integration: GitHub runs the checks on every change automatically."
+  },
+  {
+   "term": "Pre-commit hook",
+   "def": "A check that runs on your machine before git saves a commit."
+  },
+  {
+   "term": "Secret scanning",
+   "def": "Searching files for passwords and keys before they leak."
+  },
+  {
+   "term": "SAST",
+   "def": "Static analysis: reading code for security bugs without running it."
+  },
+  {
+   "term": "CVE",
+   "def": "A public ID for a known security bug, like CVE-2026-33634."
+  },
+  {
+   "term": "Supply-chain attack",
+   "def": "Breaking in through a tool or library you trust instead of your own code."
+  },
+  {
+   "term": "SHA pin",
+   "def": "Referring to a tool by its exact fingerprint, so nobody can swap it under a familiar name."
+  },
+  {
+   "term": "Dependabot",
+   "def": "A GitHub bot that proposes updates. Here it waits 7 days so bad releases get caught first."
+  },
+  {
+   "term": "Least privilege",
+   "def": "Give each job only the access it needs, nothing more."
+  },
+  {
+   "term": "ADR",
+   "def": "Architecture decision record: a one-page note on a choice and its trade-offs."
+  },
+  {
+   "term": "Dev container",
+   "def": "A ready-made workspace with every tool installed, so a new device works in minutes."
+  },
+  {
+   "term": "uv",
+   "def": "A fast Python tool that installs packages and locks exact versions."
+  }
+ ],
+ "footer": "Built from `dukecodes-project-template`. Design: Mission Control tokens in `site/assets/`.",
+ "tags": [
+  "Python + uv",
+  "GitHub Actions",
+  "pre-commit",
+  "Dev container",
+  "Claude Code"
+ ]
+}

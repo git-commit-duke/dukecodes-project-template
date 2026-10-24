@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>dukecodes project</title>
+<meta name="description" content="Project mission control: what this repo does, how it's secured, and every step to rebuild it yourself.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/mc-tokens.css">
+<link rel="stylesheet" href="assets/mc-components.css">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="./"><span class="rack" aria-hidden="true"><i></i><i></i><i></i></span><span>DUKECODES <b>//</b> MC</span></a>
+  <nav class="nav"><a href="#pipeline" aria-current="page">Mission</a><a href="#steps">Runbook</a><a href="#security">Security</a><a href="#glossary">Glossary</a></nav>
+  <span class="sp"></span>
+  <button class="ibtn" id="theme" type="button" aria-label="Toggle light or dark theme"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg></button>
+</div></header>
+<main class="wrap">
+  <div class="hero">
+    <div class="panel hero-l"><div class="eyebrow" id="eyebrow"></div><h1 id="title" style="margin-top:8px"></h1><p class="lede" id="lede"></p><div class="stats" id="stats"></div></div>
+    <div class="panel next" id="next"></div>
+  </div>
+  <div class="sec-h" id="pipeline"><h2>Pipeline</h2><p>Each stage is a group of steps. Amber is where you are. Ticks save in this browser.</p></div>
+  <div class="swarm" id="swarm"></div>
+  <div id="steps"></div>
+  <div class="sec-h" id="security"><h2>Security gates</h2><p>What runs on every change, and what it stops.</p></div>
+  <div class="panel tbl-wrap"><table class="t" id="gates"></table></div>
+  <div class="sec-h" id="glossary"><h2>Glossary</h2><p>Plain-English definitions. No tech background assumed.</p></div>
+  <div class="gloss" id="gloss"></div>
+  <p class="foot" id="foot"></p>
+</main>
+<script src="assets/mc.js" defer></script>
+</body>
+</html>

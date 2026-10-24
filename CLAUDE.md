@@ -3,7 +3,7 @@
 <One sentence: what this repo is and who uses it. Replace this line.>
 
 ## Commands
-`make setup` · `make check` (lint + test + scan) · `make test` · `make scan`
+`make setup` · `make check` (lint + test + scan) · `make test` · `make scan` · page preview: `python3 -m http.server -d site`
 
 ## Rules
 - Role: Claude reads, audits, and proposes. Duke runs anything that touches real infra (Proxmox, OPNsense, Tailscale, cloud). Hand him the exact command and what it does.
@@ -12,6 +12,7 @@
 - Tests first for logic. Decisions with trade-offs get an ADR in `docs/adr/`.
 - New GitHub Action: pin by full SHA with a `# vX.Y.Z` comment. No tag pins.
 - Branch + PR for every change. No direct pushes to main.
+- Docs, README and `site/project.json` follow `docs/STYLE.md` (Mission Control): plain English for non-tech readers, Why / Do / Check / Undo, FACT/INFERENCE/ASSUMPTION labels.
 
 ## Gotchas
 - Permission rules match each subcommand separately; `curl x | sh` is caught by the `Bash(sh)` deny, not a `curl` rule.
