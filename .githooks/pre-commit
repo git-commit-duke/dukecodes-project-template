@@ -11,7 +11,8 @@ if command -v gitleaks >/dev/null 2>&1; then
     gitleaks protect --staged --redact --no-banner               # older releases
   fi
 else
-  echo "pre-commit: gitleaks is not installed (winget install Gitleaks.Gitleaks); secret scan skipped" >&2
+  echo "pre-commit: gitleaks is not installed (winget install Gitleaks.Gitleaks). Commit blocked: no secret scan, no commit." >&2
+  exit 1
 fi
 
 if printf '%s\n' "$staged" | grep -E '(^|/)\.env(\.[^/]+)?$' | grep -vE '\.env\.example$' >/dev/null; then
