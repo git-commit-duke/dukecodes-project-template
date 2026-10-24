@@ -1,23 +1,23 @@
 {
  "title": "dukecodes project template",
- "eyebrow": "Mission control · project template",
+ "eyebrow": "DevSecOps project template · free and open",
  "headline": [
-  "Start a secure project.",
-  "Every gate on from commit one."
+  "Learn security by",
+  "shipping real projects."
  ],
- "lede": "This is the starting point for every dukecodes project and lab. It comes with security checks, tests and guardrails for AI helpers already switched on, so you learn good habits from the first day. Every step below says why it matters, what to type, how to check it worked, and how to undo it. No tech background assumed.",
+ "lede": "A starter kit with the same security checks big companies use, already switched on and explained in plain English. Watch the gates catch real attacks, then build it yourself step by step. No tech background needed.",
  "stats": [
   {
    "v": "7",
-   "k": "security scanners"
+   "k": "security gates"
+  },
+  {
+   "v": "5",
+   "k": "attack demos"
   },
   {
    "v": "0",
-   "k": "tag-pinned actions"
-  },
-  {
-   "v": "1 cmd",
-   "k": "to run every check"
+   "k": "setup cost"
   }
  ],
  "stages": [
@@ -47,7 +47,12 @@
      "do": "Replace YOUR-REPO with the name you picked.",
      "do_cmd": "git clone https://github.com/YOUR-USER/YOUR-REPO.git\ncd YOUR-REPO",
      "check": "`git status` says `On branch main` and `nothing to commit`.",
-     "undo": "Delete the folder. Nothing on GitHub changes."
+     "undo": "Delete the folder. Nothing on GitHub changes.",
+     "out": [
+      "Cloning into 'YOUR-REPO'...",
+      "remote: Enumerating objects: 52, done.",
+      "Receiving objects: 100% (52/52), done."
+     ]
     }
    ]
   },
@@ -66,7 +71,11 @@
      "do": "Use lowercase letters, digits and dashes.",
      "do_cmd": "make init NAME=my-project",
      "check": "`src/` now holds a folder named after your project and the README title changed.",
-     "undo": "`git checkout -- . && git clean -fd` restores the template files."
+     "undo": "`git checkout -- . && git clean -fd` restores the template files.",
+     "out": [
+      "Resolved 12 packages in 4ms",
+      "Renamed to my-project. Next: edit CLAUDE.md line 3 and pyproject authors, then make setup."
+     ]
     },
     {
      "id": "setup-02",
@@ -78,7 +87,11 @@
      "do": "Needs `uv` installed (one line from astral.sh). Or open the repo in the dev container, which runs this for you.",
      "do_cmd": "make setup",
      "check": "Last line reads `pre-commit installed at .git/hooks/pre-commit`.",
-     "undo": "`uvx pre-commit uninstall` removes the hooks."
+     "undo": "`uvx pre-commit uninstall` removes the hooks.",
+     "out": [
+      "Installed 12 packages in 31ms",
+      "pre-commit installed at .git/hooks/pre-commit"
+     ]
     },
     {
      "id": "setup-03",
@@ -89,7 +102,14 @@
      "why": "Proves the tools work before you write anything. If this passes, CI will too.",
      "do_cmd": "make check",
      "check": "Every line says `Passed` and tests report `passed`.",
-     "warn": "If the scan step says semgrep loaded no rules, your network blocks semgrep.dev. That is a failure, not a pass."
+     "warn": "If the scan step says semgrep loaded no rules, your network blocks semgrep.dev. That is a failure, not a pass.",
+     "out": [
+      "Detect hardcoded secrets......................Passed",
+      "ruff check....................................Passed",
+      "zizmor........................................Passed",
+      "3 passed in 0.03s",
+      "semgrep: 1062 rules, 0 finding(s)"
+     ]
     }
    ]
   },
@@ -107,7 +127,10 @@
      "why": "`main` is what everyone trusts. Branches let you experiment without breaking it. The hooks refuse commits straight to main.",
      "do_cmd": "git switch -c my-first-change",
      "check": "`git branch` shows a star next to `my-first-change`.",
-     "undo": "`git switch main && git branch -D my-first-change`."
+     "undo": "`git switch main && git branch -D my-first-change`.",
+     "out": [
+      "Switched to a new branch 'my-first-change'"
+     ]
     },
     {
      "id": "ship-02",
@@ -119,7 +142,13 @@
      "do": "Commit, push the branch, then open the PR link git prints. Fill in the template's security checklist.",
      "do_cmd": "git add -A\ngit commit -m \"Describe the change\"\ngit push -u origin my-first-change",
      "check": "The PR shows green checks for lint, test, scan and dependency-review.",
-     "undo": "Close the PR. The branch can be deleted from the PR page."
+     "undo": "Close the PR. The branch can be deleted from the PR page.",
+     "out": [
+      "[my-first-change 1a2b3c4] Describe the change",
+      "Detect hardcoded secrets......................Passed",
+      "remote: Create a pull request for 'my-first-change' on GitHub by visiting:",
+      "remote:   https://github.com/YOUR-USER/YOUR-REPO/pull/new/my-first-change"
+     ]
     },
     {
      "id": "ship-03",
@@ -175,75 +204,355 @@
  "glossary": [
   {
    "term": "Repository (repo)",
-   "def": "A project folder with its full change history, stored by git."
+   "def": "A project folder with its full change history, stored by git.",
+   "match": [
+    "repository",
+    "repo"
+   ]
   },
   {
    "term": "Commit",
-   "def": "A saved snapshot of your changes with a message saying why."
+   "def": "A saved snapshot of your changes with a message saying why.",
+   "match": [
+    "commit",
+    "commits"
+   ]
   },
   {
    "term": "Branch",
-   "def": "A separate line of work. Merge it into main when it's ready."
+   "def": "A separate line of work. Merge it into main when it's ready.",
+   "match": [
+    "branch",
+    "branches"
+   ]
   },
   {
    "term": "Pull request (PR)",
-   "def": "A request to merge a branch. Where checks run and reviews happen."
+   "def": "A request to merge a branch. Where checks run and reviews happen.",
+   "match": [
+    "pull request",
+    "PR"
+   ]
   },
   {
    "term": "CI",
-   "def": "Continuous integration: GitHub runs the checks on every change automatically."
+   "def": "Continuous integration: GitHub runs the checks on every change automatically.",
+   "match": [
+    "CI"
+   ]
   },
   {
    "term": "Pre-commit hook",
-   "def": "A check that runs on your machine before git saves a commit."
+   "def": "A check that runs on your machine before git saves a commit.",
+   "match": [
+    "pre-commit",
+    "hooks"
+   ]
   },
   {
    "term": "Secret scanning",
-   "def": "Searching files for passwords and keys before they leak."
+   "def": "Searching files for passwords and keys before they leak.",
+   "match": [
+    "secret scanning"
+   ]
   },
   {
    "term": "SAST",
-   "def": "Static analysis: reading code for security bugs without running it."
+   "def": "Static analysis: reading code for security bugs without running it.",
+   "match": [
+    "SAST"
+   ]
   },
   {
    "term": "CVE",
-   "def": "A public ID for a known security bug, like CVE-2026-33634."
+   "def": "A public ID for a known security bug, like CVE-2026-33634.",
+   "match": [
+    "CVE"
+   ]
   },
   {
    "term": "Supply-chain attack",
-   "def": "Breaking in through a tool or library you trust instead of your own code."
+   "def": "Breaking in through a tool or library you trust instead of your own code.",
+   "match": [
+    "supply chain",
+    "supply-chain"
+   ]
   },
   {
    "term": "SHA pin",
-   "def": "Referring to a tool by its exact fingerprint, so nobody can swap it under a familiar name."
+   "def": "Referring to a tool by its exact fingerprint, so nobody can swap it under a familiar name.",
+   "match": [
+    "SHA pin",
+    "SHA-pinned",
+    "exact SHA",
+    "SHA"
+   ]
   },
   {
    "term": "Dependabot",
-   "def": "A GitHub bot that proposes updates. Here it waits 7 days so bad releases get caught first."
+   "def": "A GitHub bot that proposes updates. Here it waits 7 days so bad releases get caught first.",
+   "match": [
+    "Dependabot"
+   ]
   },
   {
    "term": "Least privilege",
-   "def": "Give each job only the access it needs, nothing more."
+   "def": "Give each job only the access it needs, nothing more.",
+   "match": [
+    "least privilege"
+   ]
   },
   {
    "term": "ADR",
-   "def": "Architecture decision record: a one-page note on a choice and its trade-offs."
+   "def": "Architecture decision record: a one-page note on a choice and its trade-offs.",
+   "match": [
+    "ADR"
+   ]
   },
   {
    "term": "Dev container",
-   "def": "A ready-made workspace with every tool installed, so a new device works in minutes."
+   "def": "A ready-made workspace with every tool installed, so a new device works in minutes.",
+   "match": [
+    "dev container"
+   ]
   },
   {
    "term": "uv",
-   "def": "A fast Python tool that installs packages and locks exact versions."
+   "def": "A fast Python tool that installs packages and locks exact versions.",
+   "match": [
+    "uv"
+   ]
+  },
+  {
+   "term": "Token",
+   "def": "A password-like string a program uses to log in. Leak it and someone else can act as you.",
+   "match": [
+    "token"
+   ]
+  },
+  {
+   "term": "Injection",
+   "def": "Tricking a program into running attacker input as code or commands.",
+   "match": [
+    "injection"
+   ]
   }
  ],
  "footer": "Built from `dukecodes-project-template`. Design: Mission Control tokens in `site/assets/`.",
- "tags": [
-  "Python + uv",
-  "GitHub Actions",
-  "pre-commit",
-  "Dev container",
-  "Claude Code"
- ]
+ "simulator": {
+  "gates": [
+   {
+    "id": "gitleaks",
+    "name": "gitleaks",
+    "where": "pre-commit",
+    "zone": "local",
+    "doing": "searching staged files for secrets",
+    "ok": "no secrets found",
+    "files": 1,
+    "rules": 30
+   },
+   {
+    "id": "lint",
+    "name": "ruff + shellcheck",
+    "where": "pre-commit",
+    "zone": "local",
+    "doing": "checking code style and bugs",
+    "ok": "0 issues",
+    "files": 3,
+    "rules": 120
+   },
+   {
+    "id": "zizmor",
+    "name": "zizmor + actionlint",
+    "where": "pre-commit",
+    "zone": "local",
+    "doing": "auditing GitHub Actions workflows",
+    "ok": "all actions SHA-pinned",
+    "files": 1,
+    "rules": 45
+   },
+   {
+    "id": "tests",
+    "name": "pytest",
+    "where": "CI",
+    "zone": "ci",
+    "doing": "running tests",
+    "ok": "3 passed",
+    "files": 2,
+    "rules": 3
+   },
+   {
+    "id": "semgrep",
+    "name": "semgrep",
+    "where": "CI",
+    "zone": "ci",
+    "doing": "static analysis (SAST)",
+    "ok": "0 findings",
+    "files": 4,
+    "rules": 260
+   },
+   {
+    "id": "trivy",
+    "name": "trivy",
+    "where": "CI",
+    "zone": "ci",
+    "doing": "scanning dependencies, secrets, IaC",
+    "ok": "0 HIGH/CRITICAL",
+    "files": 5,
+    "rules": 400
+   },
+   {
+    "id": "depreview",
+    "name": "dependency-review",
+    "where": "CI · PR",
+    "zone": "ci",
+    "doing": "checking new dependencies for CVEs",
+    "ok": "no risky additions",
+    "files": 1,
+    "rules": 20
+   }
+  ],
+  "scenarios": [
+   {
+    "icon": "✓",
+    "title": "Clean change",
+    "summary": "A normal, safe commit.",
+    "lesson": "Every gate passed, so the change can be reviewed and merged. This happens in about a minute on every push."
+   },
+   {
+    "icon": "🔑",
+    "title": "Leaked token",
+    "summary": "An API token pasted into code by mistake.",
+    "blockAt": "gitleaks",
+    "cmd": "git commit -m \"add api client\"",
+    "finding": "github-pat found in src/app/client.py:12",
+    "lesson": "The token never left your laptop. If it had reached GitHub, you would have to rotate it: bots scan public repos for keys within minutes."
+   },
+   {
+    "icon": "🏷",
+    "title": "Hijacked action tag",
+    "summary": "A workflow uses `@v4` instead of an exact SHA.",
+    "blockAt": "zizmor",
+    "cmd": "git commit -m \"add release workflow\"",
+    "finding": "unpinned-uses: some/action@v4 in .github/workflows/release.yml",
+    "lesson": "Tags can be moved to malicious code, as happened to trivy-action in March 2026. A SHA pin always means the exact code you reviewed."
+   },
+   {
+    "icon": "💉",
+    "title": "Injection bug",
+    "summary": "User input passed straight into a shell command.",
+    "blockAt": "semgrep",
+    "finding": "subprocess-shell-true: user input reaches shell=True in src/app/run.py:8",
+    "lesson": "SAST reads code for dangerous patterns before it runs. Fix: pass a list of arguments and never use `shell=True` with input."
+   },
+   {
+    "icon": "📦",
+    "title": "Vulnerable library",
+    "summary": "A dependency with a known critical CVE.",
+    "blockAt": "trivy",
+    "finding": "CVE-2026-1234 (CRITICAL) in requests 2.20.0 · fixed in 2.33.1",
+    "lesson": "Most real breaches use known bugs in old libraries. trivy compares your lock file against CVE databases on every push. (Example CVE for demo.)"
+   }
+  ],
+  "heroLoop": [
+   0,
+   1,
+   0,
+   2,
+   3,
+   0,
+   4
+  ]
+ },
+ "hero": {
+  "badge": "LIVE",
+  "cta": [
+   {
+    "text": "Try the live demo →",
+    "href": "#simWrap"
+   },
+   {
+    "text": "Start building",
+    "href": "#pipeline"
+   }
+  ]
+ },
+ "features": [
+  {
+   "icon": "key",
+   "title": "Secrets never leave your laptop",
+   "text": "Passwords and tokens are caught before they're saved, not after they leak.",
+   "wide": true
+  },
+  {
+   "icon": "lock",
+   "title": "Supply chain locked down",
+   "text": "Every outside tool is pinned to an exact fingerprint. Updates wait 7 days so bad releases get caught first.",
+   "wide": true
+  },
+  {
+   "icon": "bot",
+   "title": "Guardrails for AI helpers",
+   "text": "Claude Code can read and suggest, but can't read secrets, force-push, or touch real servers."
+  },
+  {
+   "icon": "term",
+   "title": "One command checks everything",
+   "text": "`make check` runs the same gates as CI. Green locally means green on GitHub."
+  },
+  {
+   "icon": "laptop",
+   "title": "Any device in minutes",
+   "text": "Open the dev container on a new laptop or in the browser. Every tool comes installed."
+  },
+  {
+   "icon": "doc",
+   "title": "Interview-ready by design",
+   "text": "Decision records and a clean PR history show why, not just what. That's what hiring managers ask about.",
+   "wide": true
+  },
+  {
+   "icon": "shield",
+   "title": "Learn by breaking things",
+   "text": "The live demo lets you try real attack patterns safely and see exactly which control stops each one.",
+   "wide": true
+  }
+ ],
+ "path": [
+  {
+   "when": "Day 1",
+   "title": "Get it running",
+   "text": "Copy the template, run `make check`, see every gate pass."
+  },
+  {
+   "when": "Week 1",
+   "title": "Ship a change",
+   "text": "Branch, commit, open a PR, watch CI. Break it on purpose once."
+  },
+  {
+   "when": "Month 1",
+   "title": "Build a project",
+   "text": "Your own tool or lab on this base, with ADRs for each choice."
+  },
+  {
+   "when": "Interview",
+   "title": "Show your work",
+   "text": "Walk through your repo: the gates, the decisions, the attacks you blocked."
+  }
+ ],
+ "final": {
+  "kicker": "Free · open · built in public",
+  "title": "Your first secure project starts today.",
+  "text": "Everything here is free. Copy the template, follow the runbook, and you'll have something real to show, and to explain, by the end of the week.",
+  "cta": [
+   {
+    "text": "Start the runbook →",
+    "href": "#pipeline"
+   },
+   {
+    "text": "Replay the demo",
+    "href": "#simWrap"
+   }
+  ]
+ }
 }

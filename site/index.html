@@ -4,8 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>dukecodes project</title>
-<meta name="description" content="Project mission control: what this repo does, how it's secured, and every step to rebuild it yourself.">
+<meta name="description" content="Learn DevSecOps by shipping real, secure projects. Watch the security gates catch real attacks, then build it yourself step by step.">
 <meta name="color-scheme" content="light dark">
+<meta property="og:title" content="dukecodes // Mission Control">
+<meta property="og:description" content="Learn DevSecOps by shipping real, secure projects. No tech background assumed.">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,26 +16,83 @@
 <link rel="stylesheet" href="assets/mc-components.css">
 </head>
 <body>
+<div class="aura" aria-hidden="true"><i></i><i></i><i></i></div>
 <header class="top"><div class="wrap">
   <a class="brand" href="./"><span class="rack" aria-hidden="true"><i></i><i></i><i></i></span><span>DUKECODES <b>//</b> MC</span></a>
-  <nav class="nav"><a href="#pipeline" aria-current="page">Mission</a><a href="#steps">Runbook</a><a href="#security">Security</a><a href="#glossary">Glossary</a></nav>
+  <nav class="nav"><a href="#simWrap">Live demo</a><a href="#features">Why</a><a href="#pipeline">Runbook</a><a href="#glossary">Glossary</a></nav>
   <span class="sp"></span>
+  <button class="kbtn" id="kbtn" type="button" aria-label="Search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Search</span><kbd>⌘K</kbd></button>
+  <svg class="ring" viewBox="0 0 36 36" role="img" aria-label="Your progress"><circle cx="18" cy="18" r="15" fill="none" stroke="var(--line)" stroke-width="4"/><circle id="ringv" cx="18" cy="18" r="15" fill="none" stroke="var(--green)" stroke-width="4" stroke-linecap="round" stroke-dasharray="0 100" transform="rotate(-90 18 18)" pathLength="100" style="transition:stroke-dasharray .6s"/><text x="18" y="21.5" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="var(--ink)" id="ringt">0</text></svg>
   <button class="ibtn" id="theme" type="button" aria-label="Toggle light or dark theme"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg></button>
 </div></header>
 <main class="wrap">
-  <div class="hero">
-    <div class="panel hero-l"><div class="eyebrow" id="eyebrow"></div><h1 id="title" style="margin-top:8px"></h1><p class="lede" id="lede"></p><div class="stats" id="stats"></div></div>
-    <div class="panel next" id="next"></div>
-  </div>
-  <div class="sec-h" id="pipeline"><h2>Pipeline</h2><p>Each stage is a group of steps. Amber is where you are. Ticks save in this browser.</p></div>
-  <div class="swarm" id="swarm"></div>
-  <div id="steps"></div>
-  <div class="sec-h" id="security"><h2>Security gates</h2><p>What runs on every change, and what it stops.</p></div>
-  <div class="panel tbl-wrap"><table class="t" id="gates"></table></div>
-  <div class="sec-h" id="glossary"><h2>Glossary</h2><p>Plain-English definitions. No tech background assumed.</p></div>
-  <div class="gloss" id="gloss"></div>
+  <section class="hero2">
+    <div>
+      <span class="badge" id="badge"></span>
+      <h1 id="title"></h1>
+      <p class="lede" id="lede"></p>
+      <div class="cta" id="cta"></div>
+      <div class="proof" id="stats"></div>
+    </div>
+    <div class="console" aria-label="Live CI run">
+      <div class="chrome"><i></i><i></i><i></i><span id="conTitle">ci · main</span><span class="live"><span class="dot"></span>LIVE</span></div>
+      <div class="body" id="conBody" aria-live="off"></div>
+      <div class="foot2"><span id="conScn"></span><span id="conTime"></span></div>
+    </div>
+  </section>
+
+  <section id="simWrap" class="sec2 reveal">
+    <div class="head"><span class="eyebrow kicker">Interactive · try it</span><h2 class="big-h">Break it on purpose. Watch it get caught.</h2>
+      <p>Pick an attack. Follow the change from your laptop to GitHub and see exactly which gate stops it, and why.</p></div>
+    <div class="sim">
+      <div class="panel sim-l" id="scn" role="group" aria-label="Scenarios"></div>
+      <div class="panel sim-r">
+        <div class="lane" id="lane"></div>
+        <div class="zone" id="zone"></div>
+        <div class="log" id="log" role="log" aria-live="polite"></div>
+        <div class="sim-stats" id="simStats"></div>
+        <div class="verdict" id="verdict"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features" class="sec2 reveal">
+    <div class="head"><span class="eyebrow kicker">What you get</span><h2 class="big-h">Enterprise-grade security, explained like a friend would.</h2></div>
+    <div class="bento" id="bento"></div>
+  </section>
+
+  <section class="sec2 reveal">
+    <div class="head"><span class="eyebrow kicker">Your path</span><h2 class="big-h">From zero to interview-ready.</h2></div>
+    <div class="path" id="path"></div>
+  </section>
+
+  <section id="pipeline" class="sec2">
+    <div class="head reveal"><span class="eyebrow kicker">Runbook</span><h2 class="big-h">Build it yourself, one checked step at a time.</h2>
+      <p>Every step: why it matters, what to type, how to check it worked, how to undo it. Ticks save in this browser.</p></div>
+    <div class="panel continue" id="next"></div>
+    <div class="swarm" id="swarm"></div>
+    <div id="steps"></div>
+  </section>
+
+  <section id="security" class="sec2 reveal">
+    <div class="head"><span class="eyebrow kicker">Reference</span><h2 class="big-h">Every gate, in one place.</h2></div>
+    <div class="gatecards" id="gatecards"></div>
+  </section>
+
+  <section id="glossary" class="sec2 reveal">
+    <div class="sec-h" style="margin-top:0"><div><span class="eyebrow kicker">Glossary</span><h2 class="big-h">Speak the language.</h2></div><span class="sp"></span>
+      <div class="seg" id="glossMode" role="group" aria-label="Glossary mode"><button type="button" data-m="list" aria-pressed="true">List</button><button type="button" data-m="quiz" aria-pressed="false">Quiz me</button></div></div>
+    <p style="color:var(--ink2);margin:-4px 0 16px">Underlined words anywhere on the page show these definitions on hover or tap.</p>
+    <div class="gloss" id="gloss"></div>
+  </section>
+
+  <section class="panel final reveal" id="final"></section>
   <p class="foot" id="foot"></p>
 </main>
+<div id="pal" role="dialog" aria-label="Search"><div class="panel box"><input id="palq" placeholder="Search steps, terms, scenarios…" autocomplete="off" aria-label="Search"><div class="res" id="palr"></div></div></div>
+<div id="tip" role="tooltip"></div>
+<div class="toast" id="toast" role="status"></div>
+<canvas id="confetti" aria-hidden="true"></canvas>
 <script src="assets/mc.js" defer></script>
 </body>
 </html>

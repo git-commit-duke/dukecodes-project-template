@@ -29,3 +29,16 @@ Add a risk badge: `safe` (repeatable), `caution` (changes config you can undo), 
 - Colors carry meaning: amber = current / attention, teal = links and facts, green = done / safe, red = risk, violet = unverified or proposal.
 - Light and dark both ship. Check text contrast (WCAG AA, 4.5:1) when adding colors.
 - Each repo's page is data, not code: edit `site/project.json`. The renderer (`mc.js`) is shared.
+
+## Interactive pieces (all driven by `site/project.json`)
+| Key | Renders |
+|-----|---------|
+| `hero`, `headline`, `lede`, `stats` | Hero with CTA buttons and count-up numbers |
+| `simulator.gates`, `simulator.scenarios` | Live gate simulator + the looping CI console in the hero. `blockAt` picks the gate that catches it |
+| `features` | Bento grid with cursor-glow tiles (`icon`: shield, key, lock, bot, laptop, doc, term, spark) |
+| `path` | Learning-path timeline |
+| `stages[].steps[]` | Runbook. Add `out` to a step for a typed terminal replay |
+| `glossary[]` (`match` = words to underline) | Hover definitions everywhere, list view, flashcard quiz |
+| `final` | Closing call to action |
+
+Motion respects "reduce motion". Every feature works without it.
