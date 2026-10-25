@@ -588,13 +588,23 @@
   }
 
   /* ---------- CommandPalette ---------- */
+  /* Search match. A whole-query run scores 8 a letter plus bonuses for a word start, the start of the text and the whole text,
+     so it always beats scattered letters (at most 6 a letter); run tells the two apart. Spaces around the query are ignored. */
+  function wordStart(s, i){ return i === 0 || /[\s\-_.,:;\/()·]/.test(s.charAt(i - 1)); }
   function fuzzy(q, t){
-    if (!q) return {score: 1, marks: []};
-    var ql = q.toLowerCase(), tl = String(t || '').toLowerCase(), j = 0, marks = [], score = 0, last = -2;
-    for (var i = 0; i < tl.length && j < ql.length; i++){
-      if (tl[i] === ql[j]){ marks.push(i); score += (i === last + 1 ? 3 : 1) + (i === 0 || tl[i - 1] === ' ' || tl[i - 1] === '-' ? 2 : 0); last = i; j++; }
+    var ql = String(q || '').trim().toLowerCase(), tl = String(t || '').toLowerCase(), n = ql.length;
+    if (!n) return {score: 1, marks: []};
+    var best = -1, at = tl.indexOf(ql);
+    while (at >= 0){ if (best < 0) best = at; if (wordStart(tl, at)){ best = at; break; } at = tl.indexOf(ql, at + 1); }
+    if (best >= 0){
+      var run = []; for (var k = 0; k < n; k++) run.push(best + k);
+      return {score: 8 * n + (wordStart(tl, best) ? 4 : 0) + (best === 0 ? 4 : 0) + (tl.length === n ? 4 : 0), marks: run, run: true};
     }
-    return j === ql.length ? {score: score, marks: marks} : null;
+    var j = 0, marks = [], score = 0, last = -2;
+    for (var i = 0; i < tl.length && j < n; i++){
+      if (tl.charAt(i) === ql.charAt(j)){ marks.push(i); score += (i === last + 1 ? 3 : 1) + (wordStart(tl, i) ? 2 : 0); last = i; j++; }
+    }
+    return j === n ? {score: score, marks: marks} : null;
   }
   function hl(t, marks){
     if (!marks.length) return t;
@@ -647,10 +657,15 @@
       }
       wasOpen.current = open;
     }, [open]);
+    /* Title counts double. An item with a whole-query run in its title, sub or kind ranks above items with scattered letters only;
+       a kind (a short label such as "step" or "M3") matches only as a run. */
     var res = items.map(function(it){
-      var mt = fuzzy(query, it.title), ms = it.sub ? fuzzy(query, it.sub) : null;
-      if (!mt && !ms) return null;
-      return {it: it, score: (mt ? mt.score * 2 : 0) + (ms ? ms.score : 0), marks: mt ? mt.marks : []};
+      var mt = fuzzy(query, it.title), ms = it.sub ? fuzzy(query, it.sub) : null, mk = it.kind ? fuzzy(query, it.kind) : null;
+      if (mk && !mk.run) mk = null;
+      if (!mt && !ms && !mk) return null;
+      var run = !!((mt && mt.run) || (ms && ms.run) || mk);
+      /* the title shows its marks only when they explain the match: its own run, or scattered letters when nothing has a run */
+      return {it: it, score: (run ? 1000 : 0) + (mt ? mt.score * 2 : 0) + (ms ? ms.score : 0) + (mk ? mk.score : 0), marks: mt && (mt.run || !run) ? mt.marks : []};
     }).filter(Boolean).sort(function(x, y){ return y.score - x.score; }).slice(0, p.max || 8);
     useEffect(function(){
       if (!open) return;
@@ -668,6 +683,8 @@
     /* The list holds options only. With no match it hides, the combobox reports collapsed, and the hint shows below it and is announced. */
     var optId = function(i){ return id + '-o' + i; };
     var hint = p.emptyHint || 'No match. Try fewer letters or another word.';
+    /* The kind column fits the page's longest kind, in characters of its mono font (CSS keeps at least 44px; past 14 it wraps). */
+    var kw = 0; items.forEach(function(it){ var n = it && it.kind ? String(it.kind).length : 0; if (n > kw) kw = n; });
     var ph = p.placeholder || 'Search steps, terms, nodes', compact = p.compact === true || p.compact === 'auto';
     var keys = (p.hotkey === false ? [] : ['Control+K', 'Meta+K']).concat(extra).join(' ');
     return h(React.Fragment, null,
@@ -682,7 +699,7 @@
             'aria-activedescendant': res.length ? optId(Math.min(act, res.length - 1)) : undefined, 'aria-label': p.label || 'Search', autoComplete: 'off', spellCheck: false,
             onChange: function(e){ setQuery(e.target.value); setAct(0); }}),
           h('div', {className: 'dk-sr', role: 'status'}, query ? (res.length ? res.length + (res.length === 1 ? ' result' : ' results') : hint) : ''),
-          h('div', {className: 'res', role: 'listbox', id: id + '-list', 'aria-label': 'Results', hidden: !res.length}, res.map(function(r, i){
+          h('div', {className: 'res', role: 'listbox', id: id + '-list', 'aria-label': 'Results', hidden: !res.length, style: kw ? {'--dk-pal-k': Math.min(kw, 14) + 'ch'} : undefined}, res.map(function(r, i){
             return h('div', {key: r.it.id || r.it.title, id: optId(i), role: 'option', 'aria-selected': String(i === act), className: cx('r', i === act && 'on'), onMouseEnter: function(){ setAct(i); }, onClick: function(){ pick(r); }},
               h('span', {className: 'k'}, r.it.kind || ''),
               h('span', {className: 'c'}, h('span', {className: 't'}, hl(r.it.title, r.marks)), r.it.sub ? h('span', {className: 'x'}, r.it.sub) : null),

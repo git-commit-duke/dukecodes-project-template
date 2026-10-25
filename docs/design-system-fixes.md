@@ -6,7 +6,7 @@ After every [sync](runbooks/sync-design-system.md), go down this list. If the ne
 
 ## Open gaps
 
-None in version `1792894514-64fe` (synced 2026-10-25). Version `1792893432-6fee` fixed the last six upstream: cards no longer clip glossary definitions, and the page now passes its console pass line (`passLine`), its no-match hint (`emptyHint`), its search width (`--dk-kbtn-min`) and icon-only mode (`compact`), and lays its stages out as a `dk-stages` grid; flashcards grow to fit. Their work-arounds are gone. Version `1792894514-64fe` also keeps the search list valid for screen readers when nothing matches: the hint now sits under the list and is announced.
+None in version `1792897507-43e5` (synced 2026-10-25). Version `1792893432-6fee` fixed the last six upstream: cards no longer clip glossary definitions, and the page now passes its console pass line (`passLine`), its no-match hint (`emptyHint`), its search width (`--dk-kbtn-min`) and icon-only mode (`compact`), and lays its stages out as a `dk-stages` grid; flashcards grow to fit. Their work-arounds are gone. Version `1792894514-64fe` also keeps the search list valid for screen readers when nothing matches: the hint now sits under the list and is announced. Version `1792896120-63a9` sizes the search's kind column to the longest kind and keeps every gate's tool line on one row when a gate name wraps. Version `1792897507-43e5` ranks a search word typed in full, such as a step ID, above scattered letter matches.
 
 ## Guarded behaviour
 
