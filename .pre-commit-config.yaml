@@ -1,0 +1,66 @@
+# Every hook is pinned to a full commit SHA (a tag can be moved; a SHA can't).
+# Dependabot bumps these weekly after the cooldown in .github/dependabot.yml.
+# The vendored design system and React files are byte-locked (site/ds.lock.json),
+# so the hooks that rewrite files skip them.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c  # frozen: v6.0.0
+    hooks:
+      - id: detect-private-key
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: end-of-file-fixer
+        exclude: ^site/(ds|vendor)/
+      - id: trailing-whitespace
+        exclude: ^site/(ds|vendor)/
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: no-commit-to-branch  # blocks commits on main; `make lint` and CI skip it
+        args: [--branch, main]
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: 6eaad039603a4de39fddd1cf5f727391efe9974e  # frozen: v8.30.0
+    hooks:
+      - id: gitleaks  # staged changes, on every commit
+      - id: gitleaks  # whole git history: make secrets-history (CI runs it too)
+        alias: gitleaks-history
+        name: Detect hardcoded secrets in git history
+        entry: gitleaks git --redact --verbose
+        stages: [manual]
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: 38bfb07c0c64c304f47eb52090f8288150c77730  # frozen: v0.17.1
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: a6564f5d57444e123433a5c9af733e3975c77229  # frozen: v0.11.0.1-1
+    hooks:
+      - id: shellcheck
+  - repo: https://github.com/adrienverge/yamllint
+    rev: cba56bcde1fdd01c1deb3f945e69764c291a6530  # frozen: v1.38.0
+    hooks:
+      - id: yamllint
+        args: [-d, relaxed]
+  - repo: https://github.com/Mateusz-Grzelinski/actionlint-py
+    rev: 805f85e558841bf4d852335e036b33d2b26be1cc  # frozen: v1.7.12.25
+    hooks:
+      - id: actionlint
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: c92afdf2c6ca336aaa8f39e2bd8d48f62dbd8e1f  # frozen: v1.31.1
+    hooks:
+      - id: zizmor
+        args: [--offline]  # the online audits need a GitHub token; the CI lint job runs them
+  - repo: local
+    hooks:
+      - id: site-check
+        name: Check the project page (lock hashes, project.json, CSP)
+        entry: python scripts/check_site.py
+        language: python
+        files: ^(site/|scripts/check_site\.py$|scripts/ds_tokens\.py$)
+        pass_filenames: false
+      - id: private-addresses
+        name: Block private addresses and tailnet names (use RFC 5737 examples)
+        entry: python scripts/check_private.py
+        language: python
+        types: [text]

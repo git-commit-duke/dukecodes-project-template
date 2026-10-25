@@ -1,0 +1,67 @@
+{
+  "lockVersion": 1,
+  "designSystem": {
+    "name": "dukecodes - Design system",
+    "url": "https://claude.ai/artifact/Y6oFpmBcswr26DqM5eUjCE",
+    "version": "1792897507-43e5",
+    "synced": "2026-10-25",
+    "files": {
+      "site/ds/README.md": {
+        "source": "project/README.md",
+        "sha256": "c58d4d9df87d32a8f565d43bd2dbd2edf36efc4d359cd67a69918a692936f795"
+      },
+      "site/ds/tokens.json": {
+        "source": "project/tokens.json",
+        "sha256": "9e67dbce3386d69d1b24363e823088c54f82cb25c112f13849ae3aa84d1674ce"
+      },
+      "site/ds/bundle.css": {
+        "source": "project/components/bundle.css",
+        "sha256": "a9abfe81ccbc8178e79bed138c78cd69a8878fc6a6bf77a526f471fe3383196f"
+      },
+      "site/ds/bundle.js": {
+        "source": "project/components/bundle.js",
+        "sha256": "a3c2326c0bc53c8742a6ba826e355e1328b6008778c0bca0bc5da3d0ad77748b"
+      },
+      "site/ds/index.d.ts": {
+        "source": "project/components/index.d.ts",
+        "sha256": "58a619392ad44bff016b249cfb843f305674efcc08f4a8ca3b71ee5d73d66db4"
+      }
+    }
+  },
+  "generated": {
+    "site/ds/tokens.css": {
+      "from": "site/ds/tokens.json",
+      "by": "scripts/ds_tokens.py"
+    }
+  },
+  "vendor": {
+    "react": {
+      "version": "18.3.1",
+      "license": "MIT",
+      "tarball": "https://registry.npmjs.org/react/-/react-18.3.1.tgz",
+      "integrity": "sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ==",
+      "files": {
+        "site/vendor/react-18.3.1/react.production.min.js": {
+          "source": "package/umd/react.production.min.js",
+          "sha256": "d949f1c3687aedadcedac85261865f29b17cd273997e7f6b2bfc53b2f9d4c4dd"
+        },
+        "site/vendor/react-18.3.1/LICENSE": {
+          "source": "package/LICENSE",
+          "sha256": "52412d7bc7ce4157ea628bbaacb8829e0a9cb3c58f57f99176126bc8cf2bfc85"
+        }
+      }
+    },
+    "react-dom": {
+      "version": "18.3.1",
+      "license": "MIT",
+      "tarball": "https://registry.npmjs.org/react-dom/-/react-dom-18.3.1.tgz",
+      "integrity": "sha512-5m4nQKp+rZRb09LNH59GM4BxTh9251/ylbKIbpe7TpGxfJ+9kv6BLkLBXIjjspbgbnIBNqlI23tRnTWT0snUIw==",
+      "files": {
+        "site/vendor/react-18.3.1/react-dom.production.min.js": {
+          "source": "package/umd/react-dom.production.min.js",
+          "sha256": "35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d"
+        }
+      }
+    }
+  }
+}

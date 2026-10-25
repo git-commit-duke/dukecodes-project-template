@@ -1,0 +1,1510 @@
+{
+  "schema": 2,
+  "title": "dukecodes project template",
+  "brand": {
+    "left": "DUKECODES",
+    "right": "TEMPLATE"
+  },
+  "hero": {
+    "eyebrow": "DevSecOps project template · free and open",
+    "headline": {
+      "before": "Your next project,",
+      "accent": "secure",
+      "after": "from the first commit."
+    },
+    "lede": "A starter kit with the security checks real teams use, already switched on and explained in plain English. Watch a pipeline run, fire real attacks at it, then build your own step by step.",
+    "ctas": [
+      {
+        "label": "Start the runbook",
+        "to": "/runbook/get-01",
+        "variant": "amber"
+      },
+      {
+        "label": "Try the attacks",
+        "to": "/home/break"
+      }
+    ],
+    "stats": [
+      {
+        "value": "18",
+        "label": "checks on every commit"
+      },
+      {
+        "value": "4",
+        "label": "CI jobs on every pull request"
+      },
+      {
+        "value": "7 days",
+        "label": "wait before a new version lands"
+      }
+    ]
+  },
+  "console": {
+    "title": "Watch a pipeline run",
+    "note": "On GitHub the four CI jobs run side by side; this console plays them in order. The findings are real output from the tools in this template; the summary lines are shortened.",
+    "passLine": "✓ all checks green · ready to merge",
+    "scenarios": [
+      {
+        "name": "feat/health-check",
+        "stages": [
+          "hooks",
+          "lint",
+          "test",
+          "scan",
+          "review"
+        ],
+        "fail": null,
+        "lines": [
+          "$ git commit -m \"Add health check\" && git push",
+          "hooks    18 checks: clean",
+          "lint     pre-commit, gitleaks history, zizmor: clean",
+          "test     mypy strict, pytest: clean",
+          "scan     semgrep, trivy: 0 findings",
+          "review   dependency-review: clean"
+        ]
+      },
+      {
+        "name": "feat/api-client",
+        "stages": [
+          "hooks",
+          "lint",
+          "test",
+          "scan",
+          "review"
+        ],
+        "fail": 0,
+        "lines": [
+          "$ git commit -m \"Add API client\"",
+          "hooks    gitleaks: 1 finding  github-pat in src/app/client.py:1"
+        ],
+        "why": "Commit stopped on your laptop. Move the token to an environment variable, then commit again."
+      },
+      {
+        "name": "fix/faster-check",
+        "stages": [
+          "hooks",
+          "lint",
+          "test",
+          "scan",
+          "review"
+        ],
+        "fail": 2,
+        "lines": [
+          "$ git commit -m \"Speed up the network check\" && git push",
+          "hooks    18 checks: clean",
+          "lint     pre-commit, gitleaks history, zizmor: clean",
+          "test     pytest: 1 failed  test_rejects_garbage: DID NOT RAISE ValueError"
+        ],
+        "why": "The shortcut accepts text that isn't an address. Restore the real parsing, then push again."
+      },
+      {
+        "name": "feat/http-helper",
+        "stages": [
+          "hooks",
+          "lint",
+          "test",
+          "scan",
+          "review"
+        ],
+        "fail": 3,
+        "lines": [
+          "$ git commit -m \"Add HTTP helper\" && git push",
+          "hooks    18 checks: clean",
+          "lint     pre-commit, gitleaks history, zizmor: clean",
+          "test     mypy strict, pytest: clean",
+          "scan     trivy: 8 high  urllib3 1.26.4 in uv.lock"
+        ],
+        "why": "Bump urllib3 to 2.8.0 or newer, run uv lock, then push again."
+      }
+    ]
+  },
+  "pipeline": {
+    "title": "Your path through the runbook",
+    "sub": "Each stage is a few short steps. Tick them off as you go; your progress stays in this browser."
+  },
+  "simulator": {
+    "title": "Break it on purpose",
+    "sub": "Fire an attack and watch which check stops it, why, and how to fix it. Every finding here is real output from the tools in this template.",
+    "note": "The first four gates run on your laptop at every commit. Tests and the dependency scan run in CI, on GitHub.",
+    "gates": [
+      {
+        "id": "secrets",
+        "l": "Secrets",
+        "t": "gitleaks"
+      },
+      {
+        "id": "code",
+        "l": "Python",
+        "t": "ruff"
+      },
+      {
+        "id": "shell",
+        "l": "Shell",
+        "t": "ShellCheck"
+      },
+      {
+        "id": "actions",
+        "l": "Actions",
+        "t": "zizmor"
+      },
+      {
+        "id": "tests",
+        "l": "Tests",
+        "t": "pytest"
+      },
+      {
+        "id": "deps",
+        "l": "Libraries",
+        "t": "Trivy"
+      }
+    ],
+    "attacks": [
+      {
+        "id": "token",
+        "l": "Leaked token",
+        "g": "secrets",
+        "why": "gitleaks found a GitHub token (rule github-pat) in src/app/client.py, line 1. The commit stopped on your laptop, so the token never reached GitHub.",
+        "fix": "Read the token from an environment variable, name the variable in .env.example, and commit again."
+      },
+      {
+        "id": "sqli",
+        "l": "SQL built from input",
+        "g": "code",
+        "why": "ruff S608: Possible SQL injection vector through string-based query construction. The name goes straight into the query text.",
+        "fix": "Pass values as parameters: db.execute(\"SELECT * FROM users WHERE name = ?\", (name,))."
+      },
+      {
+        "id": "unquoted",
+        "l": "Unquoted shell variable",
+        "g": "shell",
+        "why": "ShellCheck SC2086: Double quote to prevent globbing and word splitting. A file name with a space or a * in it would delete the wrong files.",
+        "fix": "Quote it: rm \"$file\"."
+      },
+      {
+        "id": "tag",
+        "l": "Action pinned by a tag",
+        "g": "actions",
+        "why": "zizmor unpinned-uses: aquasecurity/trivy-action@0.33.1 is not pinned to a hash. On 19 March 2026 attackers moved 76 of that action's 77 tags to code that stole CI secrets (CVE-2026-33634).",
+        "fix": "Pin the full 40-character commit SHA with a # vX.Y.Z comment. Dependabot keeps it current."
+      },
+      {
+        "id": "inject",
+        "l": "Issue title in a script",
+        "g": "actions",
+        "why": "zizmor template-injection: github.event.issue.title is pasted into a run script, so anyone who opens an issue can run commands in your CI.",
+        "fix": "Pass it in through env (TITLE: ${{ github.event.issue.title }}) and use \"$TITLE\" in the script."
+      },
+      {
+        "id": "logic",
+        "l": "Broken logic",
+        "g": "tests",
+        "why": "pytest: test_rejects_garbage failed with DID NOT RAISE ValueError. A string shortcut stopped checking that the input is an address at all.",
+        "fix": "Restore the real parsing with the ipaddress module, run make test, then push again."
+      },
+      {
+        "id": "dep",
+        "l": "Vulnerable library",
+        "g": "deps",
+        "why": "Trivy found 8 high-severity CVEs in urllib3 1.26.4 in uv.lock, from CVE-2021-33503 to CVE-2026-97689.",
+        "fix": "Bump urllib3 to 2.8.0 or newer, run uv lock, then push again."
+      },
+      {
+        "id": "clean",
+        "l": "Clean change",
+        "g": null,
+        "why": "Every gate passed: no secrets, no risky code, pinned workflows, green tests, no known-vulnerable libraries.",
+        "fix": "Nothing to fix. Open the pull request and ask for a review."
+      }
+    ]
+  },
+  "why": {
+    "title": "Why it's built this way",
+    "sub": "Each choice answers a real way projects get hurt.",
+    "cards": [
+      {
+        "span": 4,
+        "tone": "amber",
+        "eyebrow": "Secrets",
+        "title": "Secrets stop on your laptop",
+        "body": "gitleaks checks every commit before it's saved, and CI scans the whole history in case one slipped in before the hooks were on."
+      },
+      {
+        "span": 2,
+        "tone": "teal",
+        "eyebrow": "Supply chain",
+        "stat": "40",
+        "title": "characters in every pin",
+        "body": "Actions and hooks point at a full commit SHA, which can't be moved the way a tag can."
+      },
+      {
+        "span": 2,
+        "tone": "green",
+        "eyebrow": "One command",
+        "stat": "make check",
+        "title": "Green here, green in CI",
+        "body": "It runs the same lint, type checks, tests and history scan that CI runs."
+      },
+      {
+        "span": 2,
+        "tone": "violet",
+        "eyebrow": "AI helpers",
+        "title": "Guardrails for Claude Code",
+        "body": "It can read and propose. `.claude/settings.json` stops it reading `.env` or keys, force-pushing, or running infrastructure commands."
+      },
+      {
+        "span": 2,
+        "eyebrow": "Any laptop",
+        "stat": "60 h",
+        "title": "of free Codespaces a month",
+        "body": "GitHub Free includes 120 core hours, so 60 hours on a 2-core codespace with every tool installed."
+      },
+      {
+        "span": 6,
+        "tone": "amber",
+        "eyebrow": "Interviews",
+        "title": "Show why, not just what",
+        "body": "Decision records in `docs/adr/` and a clean pull request history are the story you tell: what you chose, what you gave up, and how you proved it works.",
+        "link": {
+          "label": "See every gate",
+          "to": "/gates"
+        }
+      }
+    ]
+  },
+  "path": {
+    "title": "Where this takes you",
+    "sub": "From first copy to something you can show.",
+    "steps": [
+      {
+        "when": "Day 1",
+        "title": "Get it running",
+        "body": "Copy the template, run `make check`, watch every check pass.",
+        "to": "/runbook/get-01"
+      },
+      {
+        "when": "Week 1",
+        "title": "Ship a change",
+        "body": "Branch, commit, open a pull request, watch CI. Break it on purpose once.",
+        "to": "/runbook/ship-01"
+      },
+      {
+        "when": "Month 1",
+        "title": "Build your project",
+        "body": "Your own tool or lab on this base, with a decision record for each trade-off.",
+        "to": "/reference/layout"
+      },
+      {
+        "when": "Interview",
+        "title": "Show your work",
+        "body": "Walk through the gates, the decisions, and the attacks your pipeline blocked.",
+        "to": "/gates"
+      }
+    ]
+  },
+  "final": {
+    "eyebrow": "Free · open · built in public",
+    "title": "Your first secure project starts today.",
+    "body": "Everything here is free on a public repository. Each step says why, what to type, how to check it worked, and how to undo it.",
+    "ctas": [
+      {
+        "label": "Start the runbook",
+        "to": "/runbook/get-01",
+        "variant": "amber"
+      },
+      {
+        "label": "Try the attacks",
+        "to": "/home/break"
+      }
+    ]
+  },
+  "runbook": {
+    "title": "Runbook",
+    "sub": "Every step says why, what to type, how to check it worked, and how to undo it. Tick steps as you go: your progress stays in this browser."
+  },
+  "stages": [
+    {
+      "id": "get",
+      "title": "Get your copy",
+      "summary": "Make your own repository from the template, then open it where you'll work.",
+      "steps": [
+        {
+          "id": "get-01",
+          "title": "Create your repository from the template",
+          "on": "github.com",
+          "risk": "safe",
+          "label": "FACT",
+          "conf": "HIGH",
+          "time": "2 min",
+          "why": "A template copies every file into a new repository that starts with a single commit, so your project begins clean and nobody else's history comes with it.",
+          "do": [
+            {
+              "text": "On GitHub, open the template and press Use this template, then Create a new repository."
+            },
+            {
+              "text": "Pick a name and choose Public or Private (see the note below), then press Create repository."
+            }
+          ],
+          "check": {
+            "text": "Your new repository shows the same files and one first commit."
+          },
+          "undo": {
+            "text": "Settings › General › Danger Zone › Delete this repository. Only for a repository you just made: it can't be undone."
+          },
+          "callouts": [
+            {
+              "kind": "gate",
+              "label": "Public or private",
+              "text": "On GitHub Free, a private repository can't publish GitHub Pages, can't enforce branch rules, and doesn't get dependency review. Choose Public unless the code must stay hidden."
+            }
+          ],
+          "sources": [
+            {
+              "title": "GitHub Docs: Creating a repository from a template",
+              "url": "https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template"
+            },
+            {
+              "title": "GitHub Docs: GitHub's plans",
+              "url": "https://docs.github.com/en/get-started/learning-about-github/githubs-plans"
+            }
+          ]
+        },
+        {
+          "id": "get-02",
+          "title": "Open it in Codespaces, no install needed",
+          "on": "browser",
+          "risk": "safe",
+          "label": "FACT",
+          "conf": "HIGH",
+          "time": "3 min",
+          "why": "A codespace is a computer in the cloud with every tool already installed by the dev container. It's the fastest way to start, on any laptop.",
+          "do": [
+            {
+              "text": "On your repository page press Code › Codespaces › Create codespace on main. While it builds, the dev container runs `make setup` for you."
+            },
+            {
+              "text": "When the editor opens, run this in its terminal:"
+            },
+            {
+              "code": "make help",
+              "where": "codespace terminal"
+            }
+          ],
+          "check": {
+            "text": "You see the list of make targets. `ls .git/hooks/pre-commit` prints the path, so the checks will run on every commit."
+          },
+          "undo": {
+            "text": "Code › Codespaces › the ⋯ menu › Delete. Commit and push first: anything not pushed is lost with the codespace."
+          },
+          "callouts": [
+            {
+              "kind": "adapt",
+              "label": "Free plan",
+              "text": "GitHub Free includes 120 core hours and 15 GB of Codespaces storage a month. Stop the codespace when you're done so it doesn't use them up."
+            }
+          ],
+          "sources": [
+            {
+              "title": "GitHub Docs: About billing for GitHub Codespaces",
+              "url": "https://docs.github.com/en/billing/concepts/product-billing/github-codespaces"
+            }
+          ]
+        },
+        {
+          "id": "get-03",
+          "title": "Or copy it to your own computer",
+          "on": "terminal",
+          "risk": "safe",
+          "label": "FACT",
+          "conf": "HIGH",
+          "time": "10 min",
+          "why": "Working locally is faster day to day. You need git, make, Python 3.12 or newer, and uv, the tool that installs the exact versions this project locks.",
+          "do": [
+            {
+              "text": "Install uv with your system's package manager:"
+            },
+            {
+              "code": "brew install uv",
+              "where": "macOS"
+            },
+            {
+              "code": "winget install --id=astral-sh.uv -e",
+              "where": "Windows (then use WSL for make)"
+            },
+            {
+              "code": "pipx install uv",
+              "where": "Linux"
+            },
+            {
+              "text": "Then copy the repository. Replace YOUR-USER and YOUR-REPO with yours:"
+            },
+            {
+              "code": "git clone https://github.com/YOUR-USER/YOUR-REPO.git\ncd YOUR-REPO",
+              "where": "terminal"
+            }
+          ],
+          "check": {
+            "text": "`git status` says you're on branch main with nothing to commit.",
+            "replay": [
+              {
+                "cmd": "git status"
+              },
+              {
+                "out": "On branch main"
+              },
+              {
+                "out": "Your branch is up to date with 'origin/main'."
+              },
+              {
+                "out": "nothing to commit, working tree clean"
+              }
+            ]
+          },
+          "undo": {
+            "text": "Delete the folder. Nothing on GitHub changes."
+          },
+          "callouts": [
+            {
+              "kind": "adapt",
+              "label": "Windows",
+              "text": "The Makefile needs bash. On Windows, work inside WSL or use Codespaces."
+            }
+          ],
+          "sources": [
+            {
+              "title": "uv docs: Installing uv",
+              "url": "https://docs.astral.sh/uv/getting-started/installation/"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "setup",
+      "title": "Make it yours",
+      "summary": "Name the project, switch on the checks, and watch them pass.",
+      "steps": [
+        {
+          "id": "setup-01",
+          "title": "Name your project",
+          "on": "terminal",
+          "risk": "caution",
+          "label": "FACT",
+          "conf": "HIGH",
+          "time": "1 min",
+          "why": "The starter code is called `app`. Renaming it once, before you write anything, keeps the name the same in code, tests and docs.",
+          "do": [
+            {
+              "code": "make init NAME=my-project",
+              "where": "terminal"
+            },
+            {
+              "text": "Use lowercase letters, digits and dashes. It renames `src/app`, updates `pyproject.toml`, the README and CLAUDE.md, and re-locks the dependencies."
+            }
+          ],
+          "check": {
+            "text": "`src/my_project/` exists and `git status` lists the renamed files. Leave them uncommitted for now: main takes no direct commits, so you commit them on a branch in step `ship-02`."
+          },
+          "undo": {
+            "text": "Throw the rename away. This also discards every other uncommitted change, so commit anything you want to keep first.",
+            "code": "git reset --hard && git clean -fd",
+            "where": "terminal"
+          }
+        },
+        {
+          "id": "setup-02",
+          "title": "Install the tools and the commit checks",
+          "on": "terminal",
+          "risk": "safe",
+          "label": "FACT",
+          "conf": "HIGH",
+          "time": "3 min",
+          "why": "`make setup` installs the exact versions from `uv.lock` and adds a git hook, so 18 checks run every time you commit. A leaked password stops on your laptop, before it ever reaches GitHub.",
+          "do": [
+            {
+              "code": "make setup",
+              "where": "terminal"
+            },
+            {
+              "text": "In Codespaces this already ran while the codespace was built."
+            }
+          ],
+          "check": {
+            "text": "One line reads `pre-commit installed at .git/hooks/pre-commit`. The first time, it then sets up each check's tools, which takes a few minutes."
+          },
+          "undo": {
+            "text": "Remove the hook. The checks stop running on commit, but CI still runs them.",
+            "code": "rm .git/hooks/pre-commit",
+            "where": "terminal"
+          }
+        },
+        {
+          "id": "setup-03",
+          "title": "Run every check",
+          "on": "terminal",
+          "risk": "safe",
+          "label": "FACT",
+          "conf": "HIGH",
+          "time": "2 min",
+          "why": "Proves the tools work before you change anything. `make check` runs what CI runs except the network scan, so green here means green on GitHub.",
+          "do": [
+            {
+              "code": "make check",
+              "where": "terminal"
+            }
+          ],
+          "check": {
+            "text": "Every hook says `Passed` or `Skipped`, and pytest ends with `passed`."
+          },
+          "undo": {
+            "text": "Checks only read your files, but the fixers (end of file, trailing spaces, ruff) can tidy them. Review with `git diff`; drop the edits like this:",
+            "code": "git checkout -- .",
+            "where": "terminal"
+          },
+          "callouts": [
+            {
+              "kind": "adapt",
+              "label": "Network scan",
+              "text": "`make scan` adds Semgrep and Trivy. They need the network and Trivy installed, so they aren't part of `make check`. CI runs them on every push."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ship",
+      "title": "Ship a change safely",
+      "summary": "The loop you repeat for every change: branch, commit, pull request, merge.",
+      "steps": [
+        {
+          "id": "ship-01",
+          "title": "Work on a branch",
+          "on": "terminal",
+          "risk": "safe",
+          "label": "FACT",
+          "conf": "HIGH",
+          "time": "1 min",
+          "why": "`main` is the version everyone trusts. A branch lets you experiment without touching it, and the hooks refuse commits made straight on `main`.",
+          "do": [
+            {
+              "code": "git switch -c my-first-change",
+              "where": "terminal"
+            }
+          ],
+          "check": {
+            "text": "Git confirms the new branch.",
+            "replay": [
+              {
+                "cmd": "git switch -c my-first-change"
+              },
+              {
+                "out": "Switched to a new branch 'my-first-change'"
+              }
+            ]
+          },
+          "undo": {
+            "text": "Go back to main and delete the branch, with any commits only it has.",
+            "code": "git switch main && git branch -D my-first-change",
+            "where": "terminal"
+          }
+        },
+        {
+          "id": "ship-02",
+          "title": "Commit, and let the hooks check it",
+          "on": "terminal",
+          "risk": "safe",
+          "label": "FACT",
+          "conf": "HIGH",
+          "time": "2 min",
+          "why": "Each commit runs the checks on the files you changed. If one fails, nothing is saved: fix what it found and commit again.",
+          "do": [
+            {
+              "text": "Make a small change, for example a sentence in README.md. Then stage everything that changed, including the rename from `make init`, and read the list:"
+            },
+            {
+              "code": "git add -A\ngit status",
+              "where": "terminal"
+            },
+            {
+              "text": "Only files you meant to change should be listed. Then commit:"
+            },
+            {
+              "code": "git commit -m \"Name the project and explain what it does\"",
+              "where": "terminal"
+            }
+          ],
+          "check": {
+            "text": "Each hook prints `Passed` or `Skipped`, then git prints the new commit."
+          },
+          "undo": {
+            "text": "Undo the last commit and keep your changes staged.",
+            "code": "git reset --soft HEAD~1",
+            "where": "terminal"
+          },
+          "callouts": [
+            {
+              "kind": "warn",
+              "label": "Never skip the checks",
+              "text": "`git commit --no-verify` skips every hook. Don't: CI runs the same checks, so it only moves the failure somewhere public."
+            }
+          ]
+        },
+        {
+          "id": "ship-03",
+          "title": "Push and open a pull request",
+          "on": "terminal + github.com",
+          "risk": "safe",
+          "label": "FACT",
+          "conf": "HIGH",
+          "time": "5 min",
+          "why": "A pull request runs every check again on GitHub's machines and leaves a public record of what changed and why. That record is what you show in interviews.",
+          "do": [
+            {
+              "code": "git push -u origin my-first-change",
+              "where": "terminal"
+            },
+            {
+              "text": "Open the link git prints, fill in the checklist, and press Create pull request."
+            }
+          ],
+          "check": {
+            "text": "The pull request shows the lint, test, scan and dependency-review checks. Wait for green ticks."
+          },
+          "undo": {
+            "text": "Close the pull request on GitHub, then delete the branch from the same page if you won't need it."
+          }
+        },
+        {
+          "id": "ship-04",
+          "title": "Require the checks before merging",
+          "on": "github.com",
+          "risk": "caution",
+          "label": "FACT",
+          "conf": "HIGH",
+          "time": "3 min",
+          "why": "A ruleset on `main` makes GitHub refuse a merge until lint, test and scan are green, even from you. It's the difference between having checks and enforcing them.",
+          "do": [
+            {
+              "text": "Do this after your first pull request has run: GitHub only lists checks that ran recently."
+            },
+            {
+              "text": "Settings › Rules › Rulesets › New ruleset › New branch ruleset. Name it main, set Enforcement status to Active, and add the default branch as the target."
+            },
+            {
+              "text": "Tick Require a pull request before merging and Require status checks to pass, then add lint, test and scan."
+            }
+          ],
+          "check": {
+            "text": "The ruleset shows Active, and a pull request with a red check can't be merged."
+          },
+          "undo": {
+            "text": "Settings › Rules › Rulesets › main: set Enforcement status to Disabled, or delete the ruleset."
+          },
+          "callouts": [
+            {
+              "kind": "gate",
+              "label": "Plan limit",
+              "text": "On GitHub Free, rulesets are enforced on public repositories only. A private one needs a paid plan."
+            }
+          ],
+          "sources": [
+            {
+              "title": "GitHub Docs: Creating rulesets for a repository",
+              "url": "https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/creating-rulesets-for-a-repository"
+            }
+          ]
+        },
+        {
+          "id": "ship-05",
+          "title": "Write down the decision",
+          "on": "editor",
+          "risk": "safe",
+          "label": "INFERENCE",
+          "conf": "HIGH",
+          "time": "10 min",
+          "why": "Interviewers ask why, not what. A one-page decision record for each trade-off is your answer, written while you still remember the reasons.",
+          "do": [
+            {
+              "text": "Copy the template to the next free number:"
+            },
+            {
+              "code": "cp docs/adr/0000-template.md docs/adr/0003-my-decision.md",
+              "where": "terminal"
+            },
+            {
+              "text": "Fill in Context, Decision, Pros, Cons and Alternatives considered, and link it from the pull request."
+            }
+          ],
+          "check": {
+            "text": "The record is part of the pull request, and the description links to it."
+          },
+          "undo": {
+            "text": "Never delete a decision. If it changes, write a new record that marks the old one superseded."
+          }
+        }
+      ]
+    },
+    {
+      "id": "page",
+      "title": "Publish your project page",
+      "summary": "Edit the page you're reading and publish it for free with GitHub Pages.",
+      "steps": [
+        {
+          "id": "page-01",
+          "title": "Preview the page on your machine",
+          "on": "terminal",
+          "risk": "safe",
+          "label": "FACT",
+          "conf": "HIGH",
+          "time": "1 min",
+          "why": "The page loads its words from `site/project.json`, which a browser won't read from a file on disk. A small local web server fixes that.",
+          "do": [
+            {
+              "code": "make preview",
+              "where": "terminal"
+            },
+            {
+              "text": "Open http://127.0.0.1:8000 in your browser. In Codespaces, open the Ports tab and the globe next to port 8000. Press Ctrl C in the terminal to stop."
+            }
+          ],
+          "check": {
+            "text": "The terminal says `Serving HTTP on 127.0.0.1 port 8000`, and this page loads."
+          },
+          "undo": {
+            "text": "Press Ctrl C. Nothing was changed."
+          }
+        },
+        {
+          "id": "page-02",
+          "title": "Make it about your project",
+          "on": "editor",
+          "risk": "safe",
+          "label": "FACT",
+          "conf": "HIGH",
+          "time": "20 min",
+          "why": "Every word on this page lives in `site/project.json`. Change the words there; the design system and the app stay as they are.",
+          "do": [
+            {
+              "text": "Edit the title, hero, stages and steps in `site/project.json`. Keep the truth labels honest."
+            },
+            {
+              "code": "make site-check",
+              "where": "terminal"
+            }
+          ],
+          "check": {
+            "text": "It prints `site OK`. A typo in a key, a link that isn't https, or a route to a missing step fails with the exact field named."
+          },
+          "undo": {
+            "text": "Restore the last committed version.",
+            "code": "git checkout -- site/project.json",
+            "where": "terminal"
+          }
+        },
+        {
+          "id": "page-03",
+          "title": "Publish it with GitHub Pages",
+          "on": "github.com",
+          "risk": "caution",
+          "label": "FACT",
+          "conf": "HIGH",
+          "time": "5 min",
+          "why": "Pages hosts the `site/` folder for free on public repositories. The pages workflow checks the page again before every deploy.",
+          "do": [
+            {
+              "text": "Settings › Pages › Build and deployment › Source: GitHub Actions."
+            },
+            {
+              "text": "Then open the Actions tab, pick the pages workflow and press Run workflow, or push a change to `site/`."
+            }
+          ],
+          "check": {
+            "text": "The pages run turns green and Settings › Pages shows Your site is live at, with your address."
+          },
+          "undo": {
+            "text": "Settings › Pages › the ⋯ menu next to Your site is live at › Unpublish site."
+          },
+          "callouts": [
+            {
+              "kind": "gate",
+              "label": "Off by default",
+              "text": "Until Pages is set to GitHub Actions, the workflow checks the page and skips the deploy with a notice instead of failing."
+            }
+          ],
+          "sources": [
+            {
+              "title": "GitHub Docs: Configuring a publishing source for your GitHub Pages site",
+              "url": "https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site"
+            },
+            {
+              "title": "GitHub Docs: Unpublishing a GitHub Pages site",
+              "url": "https://docs.github.com/en/pages/getting-started-with-github-pages/unpublishing-a-github-pages-site"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "keep",
+      "title": "Keep it healthy",
+      "summary": "Dependabot proposes updates once a week; you review and merge them.",
+      "optional": true,
+      "steps": [
+        {
+          "id": "keep-01",
+          "title": "Review your first Dependabot update",
+          "on": "github.com",
+          "risk": "safe",
+          "label": "FACT",
+          "conf": "HIGH",
+          "time": "5 min",
+          "why": "Every tool here is pinned to an exact version or commit. Dependabot proposes new versions only once they're 7 days old, so a bad release has time to get caught first.",
+          "do": [
+            {
+              "text": "Open the Pull requests tab and pick one from dependabot. Read the release notes it links, check that CI is green, then merge."
+            }
+          ],
+          "check": {
+            "text": "The pull request merges and CI on main stays green."
+          },
+          "undo": {
+            "text": "Revert the merge commit from the pull request page, or close an open one to skip that version."
+          },
+          "callouts": [
+            {
+              "kind": "adapt",
+              "label": "Security fixes",
+              "text": "Security updates skip the 7-day wait. If uv refuses a brand-new fix, exempt just that package in `pyproject.toml` with `exclude-newer-package = { urllib3 = false }`, then remove it a week later."
+            }
+          ],
+          "sources": [
+            {
+              "title": "GitHub Docs: Dependabot options reference",
+              "url": "https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference"
+            },
+            {
+              "title": "uv docs: exclude-newer setting",
+              "url": "https://docs.astral.sh/uv/reference/settings/#exclude-newer"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "gates": {
+    "title": "Every gate in this template",
+    "sub": "What each check catches, when it runs, and where to change it.",
+    "rows": [
+      {
+        "id": "secrets",
+        "gate": "Secrets",
+        "tool": "gitleaks",
+        "runs": "Every commit, on the staged files.",
+        "catches": "Passwords, tokens and private keys committed by mistake.",
+        "config": ".pre-commit-config.yaml"
+      },
+      {
+        "id": "history",
+        "gate": "Git history",
+        "tool": "gitleaks (history)",
+        "runs": "CI on every push, and `make secrets-history`.",
+        "catches": "A secret committed before the hooks were on, still sitting in an old commit.",
+        "config": ".pre-commit-config.yaml"
+      },
+      {
+        "id": "python",
+        "gate": "Python code",
+        "tool": "ruff",
+        "runs": "Every commit, and in CI.",
+        "catches": "Bugs and risky calls, like SQL built from strings (S608) or `shell=True` with input (S602).",
+        "config": "pyproject.toml"
+      },
+      {
+        "id": "types",
+        "gate": "Types",
+        "tool": "mypy (strict)",
+        "runs": "CI, and `make typecheck`.",
+        "catches": "Values used as the wrong kind of data, found before the code runs.",
+        "config": "pyproject.toml"
+      },
+      {
+        "id": "shell",
+        "gate": "Shell scripts",
+        "tool": "ShellCheck",
+        "runs": "Every commit, and in CI.",
+        "catches": "Unquoted variables and other shell traps (SC2086).",
+        "config": ".pre-commit-config.yaml"
+      },
+      {
+        "id": "yaml",
+        "gate": "YAML",
+        "tool": "yamllint, check-yaml",
+        "runs": "Every commit, and in CI.",
+        "catches": "Broken or sloppy YAML, before it breaks a workflow.",
+        "config": ".pre-commit-config.yaml"
+      },
+      {
+        "id": "workflows",
+        "gate": "Workflows",
+        "tool": "actionlint, zizmor",
+        "runs": "Every commit, offline. CI adds zizmor's online checks.",
+        "catches": "Broken workflows, template injection, tag pins and over-broad permissions.",
+        "config": ".github/workflows/"
+      },
+      {
+        "id": "tests",
+        "gate": "Tests",
+        "tool": "pytest",
+        "runs": "CI, and `make test`.",
+        "catches": "Code that stopped doing what it promised.",
+        "config": "tests/"
+      },
+      {
+        "id": "sast",
+        "gate": "Code patterns",
+        "tool": "Semgrep",
+        "runs": "CI scan job, and `make scan`. Fails if no rules load.",
+        "catches": "Risky patterns in any language, from Semgrep's default rule set.",
+        "config": "scripts/scan.sh"
+      },
+      {
+        "id": "deps",
+        "gate": "Libraries",
+        "tool": "Trivy",
+        "runs": "CI scan job, and `make scan`.",
+        "catches": "Libraries with known vulnerabilities, secrets in files, and insecure Docker or infrastructure settings.",
+        "config": ".github/workflows/ci.yml"
+      },
+      {
+        "id": "review",
+        "gate": "New libraries",
+        "tool": "dependency-review",
+        "runs": "CI on pull requests. Private repositories need GitHub Code Security.",
+        "catches": "A pull request that adds a library with a high-severity vulnerability.",
+        "config": ".github/workflows/ci.yml"
+      },
+      {
+        "id": "page",
+        "gate": "This page",
+        "tool": "check_site.py",
+        "runs": "Every commit that touches `site/`, and before every Pages deploy.",
+        "catches": "A weakened Content-Security-Policy, inline scripts, HTML sinks, edited design-system files, and broken routes or links.",
+        "config": "scripts/check_site.py"
+      },
+      {
+        "id": "updates",
+        "gate": "Updates",
+        "tool": "Dependabot",
+        "runs": "Weekly, after a 7-day cooldown. Security updates skip the wait.",
+        "catches": "Pins that fall behind, including versions with known vulnerabilities.",
+        "config": ".github/dependabot.yml"
+      },
+      {
+        "id": "ai",
+        "gate": "AI helpers",
+        "tool": "Claude Code settings",
+        "runs": "Every Claude Code session in this repository.",
+        "catches": "An AI helper reading `.env` or keys, force-pushing, or running infrastructure commands.",
+        "config": ".claude/settings.json"
+      }
+    ]
+  },
+  "reference": {
+    "title": "Reference",
+    "sub": "What the labels mean, cards to test yourself, the glossary, exact versions, and where everything lives."
+  },
+  "flashcards": [
+    {
+      "tag": "Basics",
+      "q": "What does a pre-commit hook do?",
+      "a": "It runs checks on your machine before git saves a commit. If one fails, the commit doesn't happen."
+    },
+    {
+      "tag": "Habits",
+      "q": "A hook failed. Should you commit with --no-verify?",
+      "a": "No. It skips every check, and CI runs them again anyway, so the failure just moves somewhere public. Fix the finding instead."
+    },
+    {
+      "tag": "Secrets",
+      "q": "You pushed a token by mistake. What do you do first?",
+      "a": "Revoke it with the service that issued it, right away. Deleting it from git isn't enough: assume someone already copied it."
+    },
+    {
+      "tag": "Supply chain",
+      "q": "Why pin an action to a commit SHA instead of a tag like v4?",
+      "a": "A tag can be moved to different code, as attackers did to trivy-action in March 2026. A SHA always means the exact code you reviewed."
+    },
+    {
+      "tag": "Supply chain",
+      "q": "What does the 7-day cooldown protect you from?",
+      "a": "A brand-new release that turns out to be malicious or broken. Waiting a week gives everyone else time to catch it."
+    },
+    {
+      "tag": "Gates",
+      "q": "What is SAST?",
+      "a": "Static analysis: reading code for security bugs without running it. Semgrep and ruff's S rules do it here."
+    },
+    {
+      "tag": "Gates",
+      "q": "Which check stops a pull request that adds a library with a known high-severity flaw?",
+      "a": "dependency-review, on pull requests. Trivy also flags it in the scan job."
+    },
+    {
+      "tag": "Basics",
+      "q": "What's the difference between make check and make scan?",
+      "a": "make check runs the hooks, type checks, tests and the history scan. make scan adds Semgrep and Trivy, which need the network. CI runs both."
+    },
+    {
+      "tag": "Page",
+      "q": "Why can't this page run a script injected by an attacker?",
+      "a": "Its Content-Security-Policy only allows the page's own files, and Trusted Types blocks writing HTML from strings."
+    },
+    {
+      "tag": "Habits",
+      "q": "What goes in a decision record?",
+      "a": "The context, the decision, the pros and cons, and the alternatives you turned down."
+    }
+  ],
+  "glossary": [
+    {
+      "term": "Repository",
+      "def": "A project folder with its full change history, stored by git. Repo for short.",
+      "match": [
+        "repository",
+        "repositories",
+        "repo"
+      ]
+    },
+    {
+      "term": "Commit",
+      "def": "A saved snapshot of your changes, with a message saying why.",
+      "match": [
+        "commit",
+        "commits"
+      ]
+    },
+    {
+      "term": "Branch",
+      "def": "A separate line of work. Merge it into main when it's ready.",
+      "match": [
+        "branch",
+        "branches"
+      ]
+    },
+    {
+      "term": "Pull request",
+      "def": "A request to merge a branch. It's where checks run and reviews happen. PR for short.",
+      "match": [
+        "pull request",
+        "pull requests",
+        "PR"
+      ]
+    },
+    {
+      "term": "CI",
+      "def": "Continuous integration: GitHub runs the checks on every change, automatically.",
+      "match": [
+        "CI"
+      ]
+    },
+    {
+      "term": "Pre-commit hook",
+      "def": "A check that runs on your machine before git saves a commit.",
+      "match": [
+        "pre-commit",
+        "hook",
+        "hooks"
+      ]
+    },
+    {
+      "term": "Token",
+      "def": "A password-like string a program uses to log in. Leak it and someone else can act as you.",
+      "match": [
+        "token",
+        "tokens"
+      ]
+    },
+    {
+      "term": "Environment variable",
+      "def": "A named value your system hands to a program, so secrets can live outside the code.",
+      "match": [
+        "environment variable",
+        "environment variables"
+      ]
+    },
+    {
+      "term": "Secret scanning",
+      "def": "Searching files and history for passwords and keys before they leak.",
+      "match": [
+        "secret scanning"
+      ]
+    },
+    {
+      "term": "Linter",
+      "def": "A tool that reads code for mistakes and risky patterns without running it.",
+      "match": [
+        "lint",
+        "linter",
+        "linters"
+      ]
+    },
+    {
+      "term": "Type checking",
+      "def": "Checking that values are used as the right kind of data, like text or a number, before the code runs.",
+      "match": [
+        "type checks",
+        "type checking"
+      ]
+    },
+    {
+      "term": "SAST",
+      "def": "Static application security testing: reading code for security bugs without running it.",
+      "match": [
+        "SAST"
+      ]
+    },
+    {
+      "term": "CVE",
+      "def": "A public ID for a known security flaw, like CVE-2026-33634.",
+      "match": [
+        "CVE",
+        "CVEs"
+      ]
+    },
+    {
+      "term": "Injection",
+      "def": "Tricking a program into running attacker input as code or commands.",
+      "match": [
+        "injection"
+      ]
+    },
+    {
+      "term": "Template injection",
+      "def": "In GitHub Actions: pasting untrusted text, like an issue title, into a script so it runs as commands.",
+      "match": [
+        "template injection",
+        "template-injection"
+      ]
+    },
+    {
+      "term": "Supply-chain attack",
+      "def": "Breaking in through a tool or library you trust instead of your own code.",
+      "match": [
+        "supply chain",
+        "supply-chain"
+      ]
+    },
+    {
+      "term": "SHA pin",
+      "def": "Pointing at a tool's exact commit fingerprint, so nobody can swap the code under a familiar name.",
+      "match": [
+        "SHA pin",
+        "commit SHA",
+        "SHA"
+      ]
+    },
+    {
+      "term": "Lock file",
+      "def": "A file listing the exact version and hash of every dependency, so every install is identical.",
+      "match": [
+        "lock file",
+        "lockfile",
+        "re-locks"
+      ]
+    },
+    {
+      "term": "Cooldown",
+      "def": "Waiting a set time, here 7 days, before adopting any new release.",
+      "match": [
+        "cooldown"
+      ]
+    },
+    {
+      "term": "Dependabot",
+      "def": "A GitHub bot that proposes dependency updates as pull requests.",
+      "match": [
+        "Dependabot",
+        "dependabot"
+      ]
+    },
+    {
+      "term": "Ruleset",
+      "def": "A GitHub rule on a branch, such as requiring green checks before a merge.",
+      "match": [
+        "ruleset",
+        "rulesets"
+      ]
+    },
+    {
+      "term": "ADR",
+      "def": "Architecture decision record: a one-page note on a choice and its trade-offs.",
+      "match": [
+        "ADR",
+        "decision record",
+        "decision records"
+      ]
+    },
+    {
+      "term": "Dev container",
+      "def": "A ready-made workspace definition with every tool installed, so a new machine works in minutes.",
+      "match": [
+        "dev container"
+      ]
+    },
+    {
+      "term": "Codespace",
+      "def": "A dev container running in GitHub's cloud, opened in your browser.",
+      "match": [
+        "codespace",
+        "codespaces"
+      ]
+    },
+    {
+      "term": "uv",
+      "def": "A fast Python tool that installs packages and locks their exact versions.",
+      "match": [
+        "uv"
+      ]
+    },
+    {
+      "term": "Least privilege",
+      "def": "Give each job only the access it needs, nothing more.",
+      "match": [
+        "least privilege"
+      ]
+    },
+    {
+      "term": "Content-Security-Policy",
+      "def": "A list the browser enforces of what a page may load and run. Here: only its own files, plus fonts.",
+      "match": [
+        "Content-Security-Policy",
+        "CSP"
+      ]
+    },
+    {
+      "term": "Trusted Types",
+      "def": "A browser lock that refuses to turn plain strings into HTML or code.",
+      "match": [
+        "Trusted Types"
+      ]
+    },
+    {
+      "term": "GitHub Pages",
+      "def": "GitHub's free hosting for a repository's web page.",
+      "match": [
+        "GitHub Pages"
+      ]
+    }
+  ],
+  "versions": {
+    "asOf": "2026-10-24",
+    "rows": [
+      {
+        "tool": "pre-commit",
+        "version": "4.7.0",
+        "released": "2026-10-12",
+        "pin": "version",
+        "where": "Makefile, CI",
+        "source": "https://pypi.org/project/pre-commit/4.7.0/"
+      },
+      {
+        "tool": "pre-commit-hooks",
+        "version": "v6.0.0",
+        "released": "2025-08-09",
+        "pin": "sha",
+        "where": ".pre-commit-config.yaml",
+        "source": "https://github.com/pre-commit/pre-commit-hooks/releases/tag/v6.0.0"
+      },
+      {
+        "tool": "gitleaks",
+        "version": "v8.30.0",
+        "released": "2025-11-26",
+        "pin": "sha",
+        "where": ".pre-commit-config.yaml",
+        "source": "https://github.com/gitleaks/gitleaks/releases/tag/v8.30.0"
+      },
+      {
+        "tool": "ruff",
+        "version": "v0.17.1",
+        "released": "2026-10-15",
+        "pin": "sha",
+        "where": ".pre-commit-config.yaml, uv.lock",
+        "source": "https://github.com/astral-sh/ruff-pre-commit/releases/tag/v0.17.1"
+      },
+      {
+        "tool": "shellcheck-py",
+        "version": "v0.11.0.1-1",
+        "released": "2026-08-20",
+        "pin": "sha",
+        "where": ".pre-commit-config.yaml",
+        "source": "https://github.com/shellcheck-py/shellcheck-py/releases/tag/v0.11.0.1-1"
+      },
+      {
+        "tool": "yamllint",
+        "version": "v1.38.0",
+        "released": "2026-01-13",
+        "pin": "sha",
+        "where": ".pre-commit-config.yaml",
+        "source": "https://github.com/adrienverge/yamllint/releases/tag/v1.38.0"
+      },
+      {
+        "tool": "actionlint-py",
+        "version": "v1.7.12.25",
+        "released": "2026-09-22",
+        "pin": "sha",
+        "where": ".pre-commit-config.yaml",
+        "source": "https://github.com/Mateusz-Grzelinski/actionlint-py/releases/tag/v1.7.12.25"
+      },
+      {
+        "tool": "zizmor (hook)",
+        "version": "v1.31.1",
+        "released": "2026-10-16",
+        "pin": "sha",
+        "where": ".pre-commit-config.yaml",
+        "source": "https://github.com/zizmorcore/zizmor-pre-commit/releases/tag/v1.31.1"
+      },
+      {
+        "tool": "zizmor (CI online)",
+        "version": "1.31.1",
+        "released": "2026-10-15",
+        "pin": "version",
+        "where": "CI lint job",
+        "source": "https://pypi.org/project/zizmor/1.31.1/"
+      },
+      {
+        "tool": "semgrep",
+        "version": "1.181.0",
+        "released": "2026-10-14",
+        "pin": "version",
+        "where": "CI scan job, scripts/scan.sh",
+        "source": "https://pypi.org/project/semgrep/1.181.0/"
+      },
+      {
+        "tool": "uv",
+        "version": "0.13.1",
+        "released": "2026-10-14",
+        "pin": "version",
+        "where": "CI (setup-uv)",
+        "source": "https://pypi.org/project/uv/0.13.1/"
+      },
+      {
+        "tool": "actions/checkout",
+        "version": "v7.0.1",
+        "released": "2026-07-20",
+        "pin": "sha",
+        "where": "every workflow",
+        "source": "https://github.com/actions/checkout/releases/tag/v7.0.1"
+      },
+      {
+        "tool": "astral-sh/setup-uv",
+        "version": "v10.3.0",
+        "released": "2026-10-09",
+        "pin": "sha",
+        "where": "CI",
+        "source": "https://github.com/astral-sh/setup-uv/releases/tag/v10.3.0"
+      },
+      {
+        "tool": "aquasecurity/trivy-action",
+        "version": "v0.36.0",
+        "released": "2026-04-22",
+        "pin": "sha",
+        "where": "CI scan job (runs Trivy 0.70.0)",
+        "source": "https://github.com/aquasecurity/trivy-action/releases/tag/v0.36.0"
+      },
+      {
+        "tool": "actions/dependency-review-action",
+        "version": "v5.0.0",
+        "released": "2026-05-08",
+        "pin": "sha",
+        "where": "CI on pull requests",
+        "source": "https://github.com/actions/dependency-review-action/releases/tag/v5.0.0"
+      },
+      {
+        "tool": "actions/upload-pages-artifact",
+        "version": "v5.0.0",
+        "released": "2026-04-10",
+        "pin": "sha",
+        "where": "pages workflow",
+        "source": "https://github.com/actions/upload-pages-artifact/releases/tag/v5.0.0"
+      },
+      {
+        "tool": "actions/deploy-pages",
+        "version": "v5.0.1",
+        "released": "2026-09-01",
+        "pin": "sha",
+        "where": "pages workflow",
+        "source": "https://github.com/actions/deploy-pages/releases/tag/v5.0.1"
+      },
+      {
+        "tool": "React",
+        "version": "18.3.1",
+        "released": "2024-04-26",
+        "pin": "sha256",
+        "where": "site/vendor/",
+        "source": "https://www.npmjs.com/package/react/v/18.3.1"
+      }
+    ]
+  },
+  "layout": [
+    {
+      "path": ".claude/",
+      "what": "Claude Code rules and guardrails: what the AI helper may read and run."
+    },
+    {
+      "path": ".devcontainer/",
+      "what": "The ready-made workspace for Codespaces and VS Code."
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "what": "The four CI jobs: lint, test, scan and dependency-review."
+    },
+    {
+      "path": ".github/workflows/pages.yml",
+      "what": "Checks this page, then publishes `site/` to GitHub Pages."
+    },
+    {
+      "path": ".github/dependabot.yml",
+      "what": "Weekly update pull requests, after a 7-day cooldown."
+    },
+    {
+      "path": ".pre-commit-config.yaml",
+      "what": "The 18 checks that run on every commit, each pinned to a commit SHA."
+    },
+    {
+      "path": "docs/adr/",
+      "what": "Decision records: one page per trade-off."
+    },
+    {
+      "path": "docs/runbooks/",
+      "what": "Step-by-step procedures in the same Why, Do, Check, Undo shape."
+    },
+    {
+      "path": "docs/STYLE.md",
+      "what": "How to write for this project: plain English, truth labels, risk levels."
+    },
+    {
+      "path": "scripts/",
+      "what": "`init-project.sh`, `scan.sh`, and the page tools `check_site.py` and `ds_tokens.py`."
+    },
+    {
+      "path": "site/",
+      "what": "This page. Edit `project.json`; leave `ds/` and `vendor/` alone."
+    },
+    {
+      "path": "site/ds/",
+      "what": "The dukecodes design system, copied in and hash-locked in `ds.lock.json`."
+    },
+    {
+      "path": "src/, tests/",
+      "what": "Your code and its tests. The starter is one small, tested function."
+    },
+    {
+      "path": "Makefile",
+      "what": "Every command. `make help` lists them."
+    },
+    {
+      "path": "pyproject.toml, uv.lock",
+      "what": "Python settings, and the exact version and hash of every dependency."
+    }
+  ],
+  "footer": "Built from `dukecodes-project-template` on the dukecodes design system. The words on this page live in `site/project.json`."
+}

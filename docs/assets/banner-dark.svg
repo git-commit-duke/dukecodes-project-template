@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" role="img" aria-label="dukecodes project template: secure from the first commit">
+  <defs><pattern id="g" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#ffffff" stroke-opacity=".035"/></pattern></defs>
+  <rect x="1" y="1" width="1198" height="298" rx="18" fill="#121417" stroke="#2c3138"/>
+  <rect x="1" y="1" width="1198" height="298" rx="18" fill="url(#g)"/>
+  <g transform="translate(64 64)">
+    <rect x="3" y="3" width="98" height="98" rx="14" fill="none" stroke="#ecebe6" stroke-width="6"/>
+    <rect x="19" y="21" width="66" height="17" rx="3" fill="#ffa53d"/>
+    <rect x="19" y="44" width="66" height="17" rx="3" fill="#3fd1bf"/>
+    <rect x="19" y="67" width="66" height="17" rx="3" fill="#80848b"/>
+  </g>
+  <text x="208" y="92" font-family="JetBrains Mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="16" letter-spacing="3" fill="#80848b">DUKECODES <tspan fill="#ffa53d">//</tspan> PROJECT TEMPLATE</text>
+  <text x="206" y="150" font-family="Bricolage Grotesque,Segoe UI,system-ui,-apple-system,sans-serif" font-weight="800" font-size="50" letter-spacing="-.5" fill="#ecebe6">Secure from the <tspan fill="#ffa53d">first commit.</tspan></text>
+  <text x="208" y="190" font-family="IBM Plex Sans,system-ui,-apple-system,Segoe UI,sans-serif" font-size="19" fill="#b4b6ba">A DevSecOps starter with every check switched on, explained in plain English.</text>
+  <line x1="208" y1="249" x2="1122" y2="249" stroke="#3a4049" stroke-width="2"/>
+  <rect x="208" y="232" width="112" height="34" rx="9" fill="#1a1d21" stroke="#2c3138"/><text x="222" y="254" font-family="JetBrains Mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="14" fill="#b4b6ba"><tspan fill="#6fcf73">✓</tspan> secrets</text><rect x="332" y="232" width="112" height="34" rx="9" fill="#1a1d21" stroke="#2c3138"/><text x="346" y="254" font-family="JetBrains Mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="14" fill="#b4b6ba"><tspan fill="#6fcf73">✓</tspan> python</text><rect x="456" y="232" width="112" height="34" rx="9" fill="#1a1d21" stroke="#2c3138"/><text x="470" y="254" font-family="JetBrains Mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="14" fill="#b4b6ba"><tspan fill="#6fcf73">✓</tspan> shell</text><rect x="580" y="232" width="112" height="34" rx="9" fill="#1a1d21" stroke="#2c3138"/><text x="594" y="254" font-family="JetBrains Mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="14" fill="#b4b6ba"><tspan fill="#6fcf73">✓</tspan> actions</text><rect x="704" y="232" width="112" height="34" rx="9" fill="#1a1d21" stroke="#2c3138"/><text x="718" y="254" font-family="JetBrains Mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="14" fill="#b4b6ba"><tspan fill="#6fcf73">✓</tspan> tests</text><rect x="828" y="232" width="112" height="34" rx="9" fill="#1a1d21" stroke="#2c3138"/><text x="842" y="254" font-family="JetBrains Mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="14" fill="#b4b6ba"><tspan fill="#6fcf73">✓</tspan> libraries</text><rect x="972" y="232" width="150" height="34" rx="17" fill="#1a1d21" stroke="#6fcf73" stroke-width="1.5"/><text x="988" y="254" font-family="JetBrains Mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="14" fill="#6fcf73">ready to merge</text>
+  <circle cx="958" cy="249" r="6" fill="#ffa53d"/>
+</svg>

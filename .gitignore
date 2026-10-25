@@ -1,12 +1,30 @@
-node_modules/
-dist/
-build/
-.next/
-.vercel/
-coverage/
-*.log
+# Secrets: never commit
 .env
 .env.*
 !.env.example
+*.pem
+*.key
+*.p12
+id_*
+!id_*.pub
+# IaC state
+*.tfstate*
+*.tfvars
+!*.tfvars.example
+.terraform/
+# Python
+__pycache__/
+.venv/
+.coverage
+htmlcov/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+# Node
+node_modules/
+# Claude Code local
+.claude/audit/
+.claude/settings.local.json
+# OS / editor
 .DS_Store
-Thumbs.db
+.idea/

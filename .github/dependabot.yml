@@ -1,13 +1,28 @@
 version: 2
+# cooldown: wait 7 days before adopting a new release (hijacked releases are usually caught within days).
+# Security updates skip the cooldown. Keep default-days equal to [tool.uv] exclude-newer in
+# pyproject.toml and COOLDOWN in the Makefile; tests/test_policy.py checks they match.
 updates:
-  - package-ecosystem: npm
-    directory: /
-    schedule:
-      interval: weekly
-    groups:
-      minor-and-patch:
-        update-types: [minor, patch]
   - package-ecosystem: github-actions
     directory: /
-    schedule:
-      interval: weekly
+    schedule: {interval: weekly}
+    cooldown: {default-days: 7}
+    groups: {actions: {patterns: ["*"]}}
+  - package-ecosystem: uv
+    directory: /
+    schedule: {interval: weekly}
+    cooldown: {default-days: 7}
+    groups: {python: {patterns: ["*"]}}
+  - package-ecosystem: pre-commit
+    directory: /
+    schedule: {interval: weekly}
+    cooldown: {default-days: 7}
+    groups: {hooks: {patterns: ["*"]}}
+  - package-ecosystem: devcontainers
+    directory: /
+    schedule: {interval: weekly}
+    cooldown: {default-days: 7}
+  - package-ecosystem: docker
+    directory: /
+    schedule: {interval: weekly}
+    cooldown: {default-days: 7}
