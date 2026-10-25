@@ -11,28 +11,51 @@ concurrency:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    env:
+      UV_EXCLUDE_NEWER: "7 days"  # cooldown for uvx tools; keep equal to the Makefile COOLDOWN
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
-      - run: uvx pre-commit@4.7.0 run --all-files --show-diff-on-failure
+          fetch-depth: 0  # full history for the gitleaks history scan
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          version: "0.13.1"  # newest uv past the 7-day cooldown; Dependabot can't bump this
+      - name: pre-commit hooks on every file
+        run: uvx pre-commit@4.7.0 run --all-files --show-diff-on-failure
+        env:
+          SKIP: no-commit-to-branch  # guards local commits; CI also runs on main after a merge
+      - name: gitleaks on the whole git history
+        run: uvx pre-commit@4.7.0 run --hook-stage manual gitleaks-history --all-files
+      - name: zizmor online audits (impostor commits, known-vulnerable actions)
+        run: uvx zizmor@1.31.1 --format=github .
+        env:
+          GH_TOKEN: ${{ github.token }}
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
-      - run: uv sync --frozen
-      - run: uv run pytest --cov
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          version: "0.13.1"  # newest uv past the 7-day cooldown; Dependabot can't bump this
+      - run: uv sync --locked
+      - name: mypy (strict)
+        run: uv run --locked mypy
+      - name: pytest
+        run: uv run --locked pytest --cov
   scan:
     runs-on: ubuntu-latest
+    env:
+      UV_EXCLUDE_NEWER: "7 days"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          version: "0.13.1"  # newest uv past the 7-day cooldown; Dependabot can't bump this
       # SHA-pinned on purpose: trivy-action tags were hijacked in March 2026 (CVE-2026-33634)
       - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
@@ -42,14 +65,18 @@ jobs:
           exit-code: "1"
       - name: semgrep (fails if no rules loaded)
         run: |
-          out=$(uvx semgrep@1.182.1 scan --config p/default --metrics off --json --time --quiet .) || true
+          out=$(uvx semgrep@1.181.0 scan --config p/default --metrics off --json --time --quiet .) || true
           rules=$(printf '%s' "$out" | jq -e '.time.rules | length') || rules=0
           findings=$(printf '%s' "$out" | jq -e '.results | length') || findings=-1
           echo "semgrep: $rules rules, $findings findings"
           test "$rules" -gt 0 || { echo "semgrep loaded no rules"; exit 1; }
           test "$findings" -eq 0 || { printf '%s' "$out" | jq -r '.results[] | "\(.path):\(.start.line) \(.check_id)"'; exit 1; }
   dependency-review:
-    if: github.event_name == 'pull_request'
+    # Public repos: always runs. Private repos need GitHub Code Security; once it is on,
+    # set the repository variable DEPENDENCY_REVIEW to true (Settings > Secrets and variables > Actions).
+    if: >-
+      github.event_name == 'pull_request' &&
+      (!github.event.repository.private || vars.DEPENDENCY_REVIEW == 'true')
     runs-on: ubuntu-latest
     permissions:
       contents: read

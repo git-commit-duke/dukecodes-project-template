@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # Local mirror of the CI scan job. Fails closed: a scanner that can't run is a failure.
 set -euo pipefail
+# Cooldown for uvx tools (make scan sets it; this default covers running the script directly).
+export UV_EXCLUDE_NEWER="${UV_EXCLUDE_NEWER:-7 days}"
 
 echo "== semgrep (SAST)"
 rc=0
-out=$(uvx semgrep@1.182.1 scan --config p/default --metrics off --json --time --quiet .) || rc=$?
+out=$(uvx semgrep@1.181.0 scan --config p/default --metrics off --json --time --quiet .) || rc=$?
 rules=$(printf '%s' "$out" | jq -e '.time.rules | length' 2>/dev/null) || rules=0
 findings=$(printf '%s' "$out" | jq -e '.results | length' 2>/dev/null) || findings=-1
 if ! [[ "$rules" =~ ^[0-9]+$ ]] || (( rules == 0 || findings < 0 )); then

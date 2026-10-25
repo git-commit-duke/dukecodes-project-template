@@ -1,2 +1,5 @@
 * text=auto eol=lf
 *.sh text eol=lf
+# Vendored files are byte-locked by sha256 (site/ds.lock.json): no line-ending rewrites.
+site/ds/** -text
+site/vendor/** -text

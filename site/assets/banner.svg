@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 240" role="img" aria-label="dukecodes mission control">
-  <defs><pattern id="g" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#ffffff" stroke-opacity=".05"/></pattern></defs>
-  <rect width="1200" height="240" rx="18" fill="#121417"/><rect width="1200" height="240" rx="18" fill="url(#g)"/>
-  <g transform="translate(64 64)"><rect width="112" height="112" rx="16" fill="none" stroke="#ecebe6" stroke-width="6"/>
-    <rect x="18" y="20" width="76" height="20" rx="3" fill="#ffa53d"/><rect x="18" y="46" width="76" height="20" rx="3" fill="#3fd1bf"/><rect x="18" y="72" width="76" height="20" rx="3" fill="#80848b"/></g>
-  <text x="224" y="104" font-family="JetBrains Mono,ui-monospace,monospace" font-size="18" letter-spacing="3" fill="#8d9198">DUKECODES <tspan fill="#ffa53d">//</tspan> MISSION CONTROL</text>
-  <text x="222" y="160" font-family="Bricolage Grotesque,Segoe UI,system-ui,sans-serif" font-weight="800" font-size="52" fill="#ecebe6">Secure by default. <tspan fill="#ffa53d">Explained.</tspan></text>
-  <text x="224" y="196" font-family="IBM Plex Sans,system-ui,sans-serif" font-size="18" fill="#b4b6ba">DevSecOps projects and labs, built step by step for people new to tech.</text>
-</svg>
