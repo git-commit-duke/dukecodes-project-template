@@ -1,10 +1,10 @@
-/* The project page. Reads site/project.json and draws it with the Dukecodes Design System
+/* The project page. Reads site/project.json and draws it with the dukecodes design system
    (site/ds/bundle.js). No build step: plain React.createElement.
 
    The page runs under a strict Content-Security-Policy with Trusted Types, so nothing here turns
    a string into HTML or code, and every style lives in app.css. scripts/check_site.py enforces
-   that on every commit. Where the design system needs help (a hard-coded line, a clipped
-   tooltip), the fix is marked "DS fix" and listed in docs/design-system-fixes.md. */
+   that on every commit. Where the design system needs help, the fix is marked "DS fix" and
+   listed in docs/design-system-fixes.md. */
 (function () {
   'use strict';
 
@@ -489,12 +489,39 @@
     return items;
   }
 
-  // DS fix: CommandPalette's no-match hint names a homelab step; app.css shows --pg-nomatch instead.
+  // True while the media query matches; follows the window as it resizes.
+  function useMedia(query) {
+    const read = () => {
+      try {
+        return window.matchMedia(query).matches;
+      } catch (e) {
+        return false;
+      }
+    };
+    const [on, setOn] = useState(read);
+    useEffect(() => {
+      let mq = null;
+      try {
+        mq = window.matchMedia(query);
+      } catch (e) {
+        return undefined;
+      }
+      const onChange = () => setOn(mq.matches);
+      onChange();
+      if (!mq.addEventListener) return undefined;
+      mq.addEventListener('change', onChange);
+      return () => mq.removeEventListener('change', onChange);
+    }, [query]);
+    return on;
+  }
+
+  // The header's search: this page's no-match hint, and the icon only where the header is narrow.
   function Palette({ items, onPick, hint }) {
+    const narrow = useMedia('(max-width: 719px)');
     return h(
       'div',
-      { className: 'pg-palette', style: { '--pg-nomatch': JSON.stringify(hint) } },
-      h(DS.CommandPalette, { items, placeholder: 'Search steps, gates, terms', onSelect: onPick }),
+      { className: 'pg-palette' },
+      h(DS.CommandPalette, { items, placeholder: 'Search steps, gates, terms', onSelect: onPick, emptyHint: hint, compact: narrow }),
     );
   }
 
@@ -553,9 +580,8 @@
 
   // ---------------------------------------------------------------- home: console
 
-  // DS fix: LiveConsole hard-codes its pass line; app.css shows console.passLine (--pg-pass) instead.
   function ConsolePanel({ console: c }) {
-    return h('div', { className: 'pg-console', style: { '--pg-pass': JSON.stringify(c.passLine) } }, h(DS.LiveConsole, { scenarios: c.scenarios }));
+    return h('div', { className: 'pg-console' }, h(DS.LiveConsole, { scenarios: c.scenarios, passLine: c.passLine }));
   }
 
   // ---------------------------------------------------------------- home: sections
@@ -630,7 +656,7 @@
         { className: 'pg-pipeline' },
         h(
           'ol',
-          { className: 'pg-stages' },
+          { className: 'dk-stages pg-stages' },
           data.stages.map((stage, i) => {
             const s = stageStats(stage, ticks);
             const state = s.complete ? 'done' : i === cur ? 'active' : 'idle';

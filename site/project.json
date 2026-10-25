@@ -1491,7 +1491,7 @@
     },
     {
       "path": "site/ds/",
-      "what": "The Dukecodes Design System, copied in and hash-locked in `ds.lock.json`."
+      "what": "The dukecodes design system, copied in and hash-locked in `ds.lock.json`."
     },
     {
       "path": "src/, tests/",
@@ -1506,5 +1506,5 @@
       "what": "Python settings, and the exact version and hash of every dependency."
     }
   ],
-  "footer": "Built from `dukecodes-project-template` on the Dukecodes Design System. The words on this page live in `site/project.json`."
+  "footer": "Built from `dukecodes-project-template` on the dukecodes design system. The words on this page live in `site/project.json`."
 }

@@ -79,4 +79,4 @@ src/, tests/    Python starter and its tests (delete src/ for non-Python project
 
 ## Design
 
-Every dukecodes repo uses the Dukecodes Design System, the look of Minirack Mission Control. It is copied into `site/ds/` and locked by hash, so the page loads nothing from other sites except its fonts. How to write: [`docs/STYLE.md`](docs/STYLE.md). How to update the copy: [`docs/runbooks/sync-design-system.md`](docs/runbooks/sync-design-system.md). Why it is built this way: [`docs/adr/0002-vendor-the-design-system.md`](docs/adr/0002-vendor-the-design-system.md).
+Every dukecodes repo uses the dukecodes design system, the look of Minirack Mission Control. It is copied into `site/ds/` and locked by hash, so the page loads nothing from other sites except its fonts. How to write: [`docs/STYLE.md`](docs/STYLE.md). How to update the copy: [`docs/runbooks/sync-design-system.md`](docs/runbooks/sync-design-system.md). Why it is built this way: [`docs/adr/0002-vendor-the-design-system.md`](docs/adr/0002-vendor-the-design-system.md).

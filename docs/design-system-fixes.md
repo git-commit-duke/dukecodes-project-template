@@ -1,27 +1,18 @@
 # Design-system fixes
 
-The page works around these gaps in the Dukecodes Design System (version `1792886826-addb`, synced 2026-10-25). Each one is `FACT`: read in `site/ds/bundle.js` or `bundle.css`, and checked in a browser. The work-arounds live in `site/app.js` and `site/app.css`, marked `DS fix`, because `site/ds/` is never edited.
+The page works around gaps in the dukecodes design system here, and nowhere else, because `site/ds/` is never edited. A work-around lives in `site/app.js` or `site/app.css`, marked `DS fix`, with a row below. Each row is `FACT`: read in `site/ds/bundle.js` or `bundle.css`, and checked in a browser.
 
 After every [sync](runbooks/sync-design-system.md), go down this list. If the new version fixes a gap, delete the work-around and its row. Changes to the design system itself are duke's call.
 
 ## Open gaps
 
-| Part | Gap | What the page does | Where |
-|------|-----|--------------------|-------|
-| StepCard, BentoCard | `overflow: hidden` clips a glossary definition that opens inside the card. | Sets `overflow: visible`, and lifts a hovered or focused bento card above its neighbours. | `.pg-stepwrap` and `.pg-why` in app.css |
-| LiveConsole | Prints a hard-coded pass line: "✓ all gates green · deployed to lab". | Hides that line from sight and from screen readers, and shows `console.passLine` from project.json in its place. | `ConsolePanel` in app.js, `.pg-console` in app.css |
-| CommandPalette | The no-match hint names a Minirack step: "Try a step ID like pve-11." | Hides it the same way and shows a hint about this page's steps. | `Palette` in app.js, `.pg-palette` in app.css |
-| CommandPalette | The trigger is at least 260px wide, too wide for a phone header. | 230px on desktop; on phones, the icon only. | `.pg-palette` in app.css |
-| StageCard | Fixed 160px wide, so cards don't fill the row. | Width 100% in an auto-fitting grid. | `.pg-stages` in app.css |
-| Flashcards | A fixed 170px card cuts off long answers on a phone. | 210px below 560px wide. | `.pg-flash` in app.css |
-
-`FACT`: a screen reader gets the page's text, not the hidden one. Chrome's accessibility tree was read for both swapped lines on 2026-10-24.
+None in version `1792894514-64fe` (synced 2026-10-25). Version `1792893432-6fee` fixed the last six upstream: cards no longer clip glossary definitions, and the page now passes its console pass line (`passLine`), its no-match hint (`emptyHint`), its search width (`--dk-kbtn-min`) and icon-only mode (`compact`), and lays its stages out as a `dk-stages` grid; flashcards grow to fit. Their work-arounds are gone. Version `1792894514-64fe` also keeps the search list valid for screen readers when nothing matches: the hint now sits under the list and is announced.
 
 ## Guarded behaviour
 
 | Part | Behaviour | What the repo does | Where |
 |------|-----------|--------------------|-------|
-| GateSimulator | An attack that names a gate that doesn't exist gets through every gate, with only a console warning. | `make site-check` rejects an unknown gate id, so the page never shows an attack sailing through by mistake. | `scripts/check_site.py` |
+| GateSimulator | Since version `1792893432-6fee`, an attack that names a gate the pipeline lacks shows "Setup error" and never counts as a pass. | `make site-check` still rejects an unknown gate id, so a typo fails the commit instead of reaching the page. | `scripts/check_site.py` |
 | Built-in demo data | Components fall back to built-in demo data when a page passes none. Since version `1792886826-addb` that data is made up (documentation addresses, generic hardware), but a later version could bring a real network back. | The private-address scan reads `site/ds/` too, so a copy holding a private address or a tailnet name fails the commit. | `scripts/check_private.py` |
 
 ## For the design system itself

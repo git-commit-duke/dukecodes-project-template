@@ -3,7 +3,7 @@
 `caution` · `FACT` · `HIGH` · ~15 min · runs on: your machine or the dev container
 
 ## Why
-The page's look comes from the Dukecodes Design System, copied into `site/ds/`. A copy, not a link, means the page loads no code from other sites. The hash lock in `site/ds.lock.json` means no one can change those files without a failed check and a diff in a pull request. When the design system changes, the copy goes stale; this brings it up to date.
+The page's look comes from the dukecodes design system, copied into `site/ds/`. A copy, not a link, means the page loads no code from other sites. The hash lock in `site/ds.lock.json` means no one can change those files without a failed check and a diff in a pull request. When the design system changes, the copy goes stale; this brings it up to date.
 
 ## Do
 1. Start a branch:

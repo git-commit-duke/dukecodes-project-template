@@ -1,4 +1,4 @@
-/* The project page, on top of the Dukecodes Design System (ds/tokens.css, ds/bundle.css).
+/* The project page, on top of the dukecodes design system (ds/tokens.css, ds/bundle.css).
    Page classes start with pg-. Rules that patch a design-system class are marked "DS fix" and
    listed in docs/design-system-fixes.md, so they can move upstream.
    This file loads nothing else: the page uses only its own files (scripts/check_site.py checks). */
@@ -75,15 +75,9 @@ a.dk-btn { text-decoration: none; }
   .pg-nav a { padding: 7px 10px; }
 }
 
-/* Search. DS fix: the trigger is 260px wide and the no-match hint names a homelab step.
-   The hint is hidden from sight and from screen readers; --pg-nomatch (set in app.js) shows instead. */
-.pg-palette .dk-kbtn { min-width: 230px; box-shadow: none; }
-.pg-palette .dk-pal .empty { font-size: 0; visibility: hidden; }
-.pg-palette .dk-pal .empty::after { content: var(--pg-nomatch); font-size: 13px; visibility: visible; }
-@media (max-width: 719px) {
-  .pg-palette .dk-kbtn { min-width: 0; font-size: 0; gap: 0; padding: 9px 10px; }
-  .pg-palette .dk-kbtn kbd { display: none; }
-}
+/* Search: a 230px trigger in the header; app.js turns it icon-only below 720px. */
+.pg-palette { --dk-kbtn-min: 230px; }
+.pg-palette .dk-kbtn { box-shadow: none; }
 
 /* ---------------------------------------------------------------- page frame */
 
@@ -129,33 +123,21 @@ a.dk-btn { text-decoration: none; }
 .pg-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; max-width: 560px; }
 .pg-stats .dk-stat { min-width: 0; }
 
-/* Console. DS fix: LiveConsole prints a hard-coded pass line. Hide it from sight and from screen
-   readers, and show console.passLine from project.json (--pg-pass, set in app.js) in its place. */
-.pg-console { --pg-console-fs: 12.5px; }
-.pg-console .dk-console pre { min-height: 190px; font-size: var(--pg-console-fs); }
-.pg-console .dk-console pre > div.ok:last-child { font-size: 0; visibility: hidden; }
-.pg-console .dk-console pre > div.ok:last-child::after { content: var(--pg-pass); font-size: var(--pg-console-fs); visibility: visible; }
-.pg-console .dk-console .nm { min-width: 0; overflow-wrap: anywhere; }
+/* Console: a touch smaller on phones. */
+.pg-console .dk-console pre { font-size: 12.5px; }
 @media (max-width: 560px) {
-  .pg-console { --pg-console-fs: 12px; }
+  .pg-console .dk-console pre { font-size: 12px; }
 }
 
 .pg-pipeline { display: flex; flex-direction: column; gap: 12px; }
-.pg-stages { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; list-style: none; margin: 0; padding: 0; }
-.pg-stages li { display: flex; }
-/* DS fix: StageCard is a fixed 160px wide. */
-.pg-stages .dk-stage { width: 100%; }
+/* The stage list is a dk-stages grid (app.js); the page only widens the gap. */
+.pg-stages { gap: 10px; }
 .pg-next { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 48px; }
 .pg-next-step { flex: 1 1 300px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; }
 .pg-next-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .pg-next-label { margin: 0; color: var(--ink-100); font-size: 15px; font-weight: 500; }
 .pg-next-id { margin-right: 8px; color: var(--ink-200); font: 11px var(--font-mono); }
 
-/* Bento. DS fix: BentoCard clips what rises above it; glossary definitions inside a card need to. */
-.pg-why .dk-glow { overflow: visible; }
-.pg-why .dk-glow::before { border-radius: inherit; }
-.pg-why .dk-glow:hover, .pg-why .dk-glow:focus-within { z-index: 2; }
-.pg-why .dk-glow .big { overflow-wrap: anywhere; }
 .pg-more { font-weight: 600; white-space: nowrap; }
 
 .pg-path { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; list-style: none; margin: 0; padding: 0; }
@@ -226,13 +208,6 @@ a.dk-btn { text-decoration: none; }
 .pg-stage-sum { margin: 0; max-width: 680px; color: var(--ink-200); }
 .pg-steps { display: flex; flex-direction: column; gap: 10px; }
 
-/* DS fix: StepCard clips glossary definitions. */
-.pg-stepwrap .dk-step { overflow: visible; }
-.pg-stepwrap .dk-step .b { padding-top: 16px; }
-@media (max-width: 560px) {
-  .pg-stepwrap .dk-step .h { padding: 12px; }
-  .pg-stepwrap .dk-step .b { padding: 14px 14px 16px; }
-}
 .pg-stepbody { display: flex; flex-direction: column; gap: 16px; max-width: 760px; }
 .pg-stepbody p { margin: 0; }
 .pg-block-title { margin: 0 0 6px; color: var(--ink-200); font: 500 11px/1.4 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
@@ -291,8 +266,6 @@ a.dk-btn { text-decoration: none; }
 .pg-legend ul { display: flex; flex-direction: column; gap: 10px; list-style: none; margin: 12px 0 0; padding: 0; }
 .pg-legend li { display: grid; grid-template-columns: 104px minmax(0, 1fr); gap: 10px; align-items: baseline; color: var(--ink-200); font-size: 13.5px; line-height: 1.45; }
 .pg-flash .dk-flash { max-width: 560px; }
-/* DS fix: a 170px card cuts off long answers on a phone. */
-@media (max-width: 560px) { .pg-flash .dk-flip .in { height: 210px; } }
 .pg-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 14px; }
 .pg-filter-label { color: var(--ink-200); font: 500 11px/1.4 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
 .pg-input {
