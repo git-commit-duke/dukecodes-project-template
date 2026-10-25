@@ -2,6 +2,8 @@
 
 <One sentence: what this repo is and who uses it. Replace this line.>
 
+Applies only when editing this repo. One thread edits one repo; other repos are read-only context.
+
 ## Commands
 `make setup` · `make check` (every hook, types, tests, history secret scan) · `make scan` (semgrep + trivy, needs network) · `make site-check` · page preview: `make preview` (http://127.0.0.1:8000)
 
