@@ -19,7 +19,7 @@ repos:
       - id: no-commit-to-branch  # blocks commits on main; `make lint` and CI skip it
         args: [--branch, main]
   - repo: https://github.com/gitleaks/gitleaks
-    rev: 6eaad039603a4de39fddd1cf5f727391efe9974e  # frozen: v8.30.0
+    rev: 83d9cd684c87d95d656c1458ef04895a7f1cbd8e  # frozen: v8.30.1
     hooks:
       - id: gitleaks  # staged changes, on every commit
       - id: gitleaks  # whole git history: make secrets-history (CI runs it too)
@@ -28,7 +28,7 @@ repos:
         entry: gitleaks git --redact --verbose
         stages: [manual]
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 38bfb07c0c64c304f47eb52090f8288150c77730  # frozen: v0.17.1
+    rev: c0f278f1254ccc8fb09676bcdb8d847e7db493e5  # frozen: v0.17.4
     hooks:
       - id: ruff-check
         args: [--fix]
@@ -47,7 +47,7 @@ repos:
     hooks:
       - id: actionlint
   - repo: https://github.com/zizmorcore/zizmor-pre-commit
-    rev: c92afdf2c6ca336aaa8f39e2bd8d48f62dbd8e1f  # frozen: v1.31.1
+    rev: 06a39750ec31860bb44f2acf67182c40016cd1e7  # frozen: v1.32.0
     hooks:
       - id: zizmor
         args: [--offline]  # the online audits need a GitHub token; the CI lint job runs them
